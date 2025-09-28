@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React from 'react';
-import {render} from '@testing-library/react';
+import { render } from '@testing-library/react';
 
 // Add providers here if your app needs them (Router, Redux, Theme, etc.)
 export function renderWithProviders(ui, options) {

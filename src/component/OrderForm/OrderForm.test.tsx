@@ -1,11 +1,12 @@
 // @ts-nocheck
+import { describe, it, expect } from 'vitest';
 import { renderWithProviders, screen } from "../../test-utils";
 import { orderFactory } from "../../test/factories/orderFactory";
 import OrderForm from "./OrderForm";
 
 describe("OrderForm", () => {
     it("renders the form with all input fields and the submit button", () => {
-    renderWithProviders(<OrderForm />);
+        renderWithProviders(<OrderForm />);
 
         expect(screen.getByTestId("name")).toBeTruthy();
         expect(screen.getByTestId("email")).toBeTruthy();
@@ -19,7 +20,7 @@ describe("OrderForm", () => {
     });
 
     it("has required attributes on inputs", () => {
-    renderWithProviders(<OrderForm />);
+        renderWithProviders(<OrderForm />);
 
         expect(screen.getByTestId("name").getAttribute("required")).not.toBeNull();
         expect(screen.getByTestId("email").getAttribute("required")).not.toBeNull();
@@ -32,7 +33,7 @@ describe("OrderForm", () => {
     });
 
     it("applies maxlength and pattern attributes correctly", () => {
-    renderWithProviders(<OrderForm />);
+        renderWithProviders(<OrderForm />);
 
         const name = screen.getByTestId("name");
         expect(name.getAttribute("maxLength")).toBe("200");
