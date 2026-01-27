@@ -19,7 +19,7 @@ export function orderFactory(overrides: Partial<OrderFormData> = {}): OrderFormD
     postalCode: '01234-567',
     orderScope: 'Boneca de pano personalizada',
     orderScopeDetail: 'Boneca de aproximadamente 40cm com cabelos castanhos, olhos verdes e vestido azul.',
-    receiveDate: '15/03/2025',
+    receiveDate: '2027-03-15',
     ...overrides,
   };
 }
