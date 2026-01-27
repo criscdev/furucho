@@ -57,6 +57,12 @@
             <version>8.10.1</version>
         </dependency>
 
+        <!-- Caffeine Cache for rate limiting bucket storage with TTL -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
         <!-- Lombok for reducing boilerplate -->
         <dependency>
             <groupId>org.projectlombok</groupId>
