@@ -22,6 +22,9 @@ public class AdminUserDetailsService implements UserDetailsService {
     private String adminPassword;
 
     private final PasswordEncoder passwordEncoder;
+    
+    // Cache the encoded password to avoid re-encoding on every authentication
+    private volatile String encodedPassword;
 
     public AdminUserDetailsService(@Lazy PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -30,10 +33,18 @@ public class AdminUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username.equals(adminUsername)) {
-            // Encode the password only once during loading
+            // Lazy initialize the encoded password on first use
+            if (encodedPassword == null) {
+                synchronized (this) {
+                    if (encodedPassword == null) {
+                        encodedPassword = passwordEncoder.encode(adminPassword);
+                    }
+                }
+            }
+            
             return User.builder()
                     .username(adminUsername)
-                    .password(passwordEncoder.encode(adminPassword))
+                    .password(encodedPassword)
                     .roles("ADMIN")
                     .build();
         }
