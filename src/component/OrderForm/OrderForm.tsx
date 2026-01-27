@@ -115,8 +115,20 @@ export function OrderForm({
 
     if (!formData.receiveDate.trim()) {
       newErrors.receiveDate = "Data de entrega é obrigatória";
-    } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.receiveDate)) {
-      newErrors.receiveDate = "Data inválida (formato: DD/MM/AAAA)";
+    } else {
+      // Validate ISO date format (YYYY-MM-DD)
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(formData.receiveDate)) {
+        newErrors.receiveDate = "Data inválida";
+      } else {
+        // Check if date is in the future
+        const selectedDate = new Date(formData.receiveDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate < today) {
+          newErrors.receiveDate = "Data deve ser no futuro";
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -124,6 +136,12 @@ export function OrderForm({
   };
 
   const formatWhatsAppMessage = (): string => {
+    // Format date from ISO (YYYY-MM-DD) to Brazilian format (DD/MM/YYYY)
+    const formatDate = (isoDate: string): string => {
+      const [year, month, day] = isoDate.split('-');
+      return `${day}/${month}/${year}`;
+    };
+
     return encodeURIComponent(
       `🧸 *Nova Encomenda de Boneca*\n\n` +
       `*Nome:* ${formData.name}\n` +
@@ -133,7 +151,7 @@ export function OrderForm({
       `*CEP:* ${formData.postalCode}\n\n` +
       `*Resumo:* ${formData.orderScope}\n` +
       `*Detalhes:* ${formData.orderScopeDetail}\n\n` +
-      `*Data desejada:* ${formData.receiveDate}`
+      `*Data desejada:* ${formatDate(formData.receiveDate)}`
     );
   };
 
@@ -382,7 +400,7 @@ export function OrderForm({
                 Data desejada para receber <span aria-hidden="true">*</span>
               </label>
               <input
-                type="text"
+                type="date"
                 id="receiveDate"
                 name="receiveDate"
                 value={formData.receiveDate}
@@ -390,12 +408,10 @@ export function OrderForm({
                 className="form-input"
                 aria-required="true"
                 aria-invalid={!!errors.receiveDate}
-                aria-describedby="receiveDate-hint receiveDate-error"
-                placeholder="DD/MM/AAAA"
-                maxLength={10}
+                aria-describedby={errors.receiveDate ? "receiveDate-error" : "receiveDate-hint"}
               />
               <span id="receiveDate-hint" className="text-sm" style={{ color: 'var(--color-text-light)' }}>
-                Formato: DD/MM/AAAA (ex: 25/12/2026)
+                Selecione uma data futura para entrega
               </span>
               {errors.receiveDate && (
                 <span id="receiveDate-error" className="form-error" role="alert">
