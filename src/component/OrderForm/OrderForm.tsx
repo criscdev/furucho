@@ -123,6 +123,7 @@ export function OrderForm({
       } else {
         // Check if date is in the future
         const selectedDate = new Date(formData.receiveDate);
+        selectedDate.setHours(0, 0, 0, 0); // Normalize time for consistent comparison
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (selectedDate < today) {
@@ -138,7 +139,11 @@ export function OrderForm({
   const formatWhatsAppMessage = (): string => {
     // Format date from ISO (YYYY-MM-DD) to Brazilian format (DD/MM/YYYY)
     const formatDate = (isoDate: string): string => {
-      const [year, month, day] = isoDate.split('-');
+      const parts = isoDate.split('-');
+      if (parts.length !== 3) {
+        return isoDate; // Return as-is if not in expected format
+      }
+      const [year, month, day] = parts;
       return `${day}/${month}/${year}`;
     };
 
