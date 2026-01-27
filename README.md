@@ -1,87 +1,150 @@
-# Welcome to React Router!
+# Roberta Furucho - Bonecas Artesanais 🧸
 
-A modern, production-ready template for building full-stack React applications using React Router.
+Portfolio and order platform for Roberta Furucho's handmade dolls (*bonecas artesanais*).
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## 🌸 About
 
-## Features
+This platform showcases Roberta Furucho's handmade doll creations and provides an easy way for customers to request custom orders via WhatsApp.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+**Live Demo:** Coming soon at robertafurucho.me
 
-## Getting Started
+## ✨ Features
 
-### Installation
+### Frontend
 
-Install the dependencies:
+- 🎨 **Pastel Design System** - Rose, lavender, mint, and cream colors
+- ♿ **Fully Accessible** - WCAG 2.2 AA compliant
+- 📱 **Responsive** - Mobile-first design
+- 💬 **WhatsApp Integration** - One-click order submission
+- 🖼️ **Gallery** - Showcase handmade creations
+- 🔍 **SEO Optimized** - Open Graph meta tags
+
+### Backend (Java)
+
+- ☕ **Spring Boot 3.4** - Modern Java 17 backend
+- 🗃️ **JPA/Hibernate** - H2 (dev) / PostgreSQL (prod)
+- ✅ **Validation** - Jakarta Bean Validation
+- 🚦 **Rate Limiting** - Bucket4j protection
+- 📝 **REST API** - Order management endpoints
+
+### DevOps
+
+- 🔄 **CI/CD** - GitHub Actions workflows
+- 🐳 **Docker** - Containerized deployment
+- ☁️ **Cloud Ready** - Azure + DigitalOcean configs
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- Java 17+ (for backend)
+- Maven 3.9+ (for backend)
+
+### Frontend Development
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### Development
-
-Start the development server with HMR:
-
-```bash
+# Start development server
 npm run dev
 ```
 
-Your application will be available at `http://localhost:5173`.
+Application available at `http://localhost:5173`
 
-## Building for Production
-
-Create a production build:
+### Backend Development
 
 ```bash
-npm run build
+cd backend
+
+# Run with Maven wrapper
+./mvnw spring-boot:run
 ```
 
-## Deployment
+API available at `http://localhost:8080`
 
-### Docker Deployment
-
-To build and run using Docker:
+### Running Tests
 
 ```bash
-docker build -t my-app .
+# Frontend tests
+npm test
 
-# Run the container
-docker run -p 3000:3000 my-app
+# Backend tests
+cd backend && ./mvnw test
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
+## 📁 Project Structure
 
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
+```text
+furucho/
+├── app/                    # React Router app routes
+│   ├── app.css            # Global styles + design tokens
+│   ├── root.tsx           # Root layout
+│   ├── routes/            # Route components
+│   └── welcome/           # Landing page
+├── src/
+│   ├── component/         # Reusable components
+│   │   ├── Header/        # Site header
+│   │   ├── OrderForm/     # Order request form
+│   │   └── Gallery/       # Image gallery
+│   └── test/              # Test utilities & factories
+├── backend/               # Java Spring Boot API
+│   ├── src/main/java/     # Application code
+│   └── src/test/java/     # Tests
+├── docs/                  # Documentation
+│   ├── ACCESSIBILITY.md   # A11y guidelines
+│   ├── CODING_STANDARDS.md
+│   ├── DEPLOYMENT.md      # Deployment guide
+│   └── ...
+└── .github/workflows/     # CI/CD pipelines
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
 
-## Styling
+## 🎨 Design System
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+| Token               | Color     | Usage            |
+| ------------------- | --------- | ---------------- |
+| `--color-rose`      | `#F4B8C5` | Primary accent   |
+| `--color-lavender`  | `#D8D0E8` | Secondary accent |
+| `--color-mint`      | `#B8E0C8` | Success states   |
+| `--color-cream`     | `#FFFAF5` | Backgrounds      |
+
+## 📚 Documentation
+
+- [Accessibility Guidelines](docs/ACCESSIBILITY.md)
+- [Coding Standards](docs/CODING_STANDARDS.md)
+- [Component Development](docs/COMPONENT_DEVELOPMENT.md)
+- [Testing Strategy](docs/TESTING_STRATEGY.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+- [Dev Journal](docs/DEV_JOURNAL.md)
+
+## 🛠️ Tech Stack
+
+### Frontend Technologies
+
+- React 19 + React Router 7
+- TypeScript 5
+- TailwindCSS 4
+- Vite 6
+- Vitest + React Testing Library
+
+### Backend Technologies
+
+- Java 17
+- Spring Boot 3.4
+- Spring Data JPA
+- H2 / PostgreSQL
+- Bucket4j (rate limiting)
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 👩‍🎨 Credits
+
+Handmade dolls by **Roberta Furucho**  
+📸 Instagram: [@robertafurucho1](https://instagram.com/robertafurucho1)
 
 ---
 
-Built with ❤️ using React Router.
+Feito com 💜 no Brasil 🇧🇷
