@@ -1,14 +1,25 @@
-// @ts-nocheck
-export function orderFactory(overrides = {}) {
+import type { OrderFormData } from '../../component/OrderForm/OrderForm';
+
+/**
+ * Factory for creating test order data.
+ * 
+ * @example
+ * // Default data
+ * const order = orderFactory();
+ * 
+ * // With overrides
+ * const order = orderFactory({ name: 'Maria Silva' });
+ */
+export function orderFactory(overrides: Partial<OrderFormData> = {}): OrderFormData {
   return {
-    name: 'Test Name',
-    email: 'test@example.com',
-    phone: '12345678901',
-    address: '123 Test St',
-    postalCode: '12345',
-    orderScope: 'Produto A',
-    orderScopeDetail: 'Detalhes do pedido',
-    receiveDate: '2025-10-01',
+    name: 'Maria da Silva',
+    email: 'maria@exemplo.com',
+    phone: '11999998888',
+    address: 'Rua das Flores, 123, São Paulo - SP',
+    postalCode: '01234-567',
+    orderScope: 'Boneca de pano personalizada',
+    orderScopeDetail: 'Boneca de aproximadamente 40cm com cabelos castanhos, olhos verdes e vestido azul.',
+    receiveDate: '15/03/2025',
     ...overrides,
   };
 }
