@@ -1,6 +1,7 @@
 package com.robertafurucho.security;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -22,13 +23,14 @@ public class AdminUserDetailsService implements UserDetailsService {
 
     private final PasswordEncoder passwordEncoder;
 
-    public AdminUserDetailsService(PasswordEncoder passwordEncoder) {
+    public AdminUserDetailsService(@Lazy PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username.equals(adminUsername)) {
+            // Encode the password only once during loading
             return User.builder()
                     .username(adminUsername)
                     .password(passwordEncoder.encode(adminPassword))
