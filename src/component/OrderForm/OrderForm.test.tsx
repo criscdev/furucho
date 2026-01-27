@@ -91,7 +91,12 @@ describe('OrderForm', () => {
       );
     });
 
-    expect(mockCallback).toHaveBeenCalledWith(orderData);
+    // Expect normalized data (phone and postalCode without formatting)
+    expect(mockCallback).toHaveBeenCalledWith({
+      ...orderData,
+      phone: orderData.phone.replace(/\D/g, ""),
+      postalCode: orderData.postalCode.replace("-", "")
+    });
     expect(await screen.findByText(/redirecionando para o whatsapp/i)).toBeInTheDocument();
 
     mockOpen.mockRestore();
