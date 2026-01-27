@@ -25,13 +25,17 @@ import java.util.Map;
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class OrderController {
 
+    // Rate limiting configuration
+    private static final int RATE_LIMIT_CACHE_MAX_SIZE = 10_000;
+    private static final Duration RATE_LIMIT_CACHE_TTL = Duration.ofMinutes(10);
+
     private final OrderService orderService;
     
     // Rate limiting: Cache of IP -> Bucket with automatic expiration
-    // Entries expire after 10 minutes of inactivity to prevent memory leaks
+    // Entries expire after inactivity to prevent memory leaks
     private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
-        .expireAfterAccess(Duration.ofMinutes(10))
-        .maximumSize(10_000)
+        .expireAfterAccess(RATE_LIMIT_CACHE_TTL)
+        .maximumSize(RATE_LIMIT_CACHE_MAX_SIZE)
         .build();
 
     public OrderController(OrderService orderService) {
