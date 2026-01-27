@@ -95,7 +95,7 @@ describe('OrderForm', () => {
     expect(mockCallback).toHaveBeenCalledWith({
       ...orderData,
       phone: orderData.phone.replace(/\D/g, ""),
-      postalCode: orderData.postalCode.replace("-", "")
+      postalCode: orderData.postalCode.replace(/-/g, "")
     });
     expect(await screen.findByText(/redirecionando para o whatsapp/i)).toBeInTheDocument();
 

@@ -123,7 +123,7 @@ describe('Order Flow Integration', () => {
     expect(onSuccess).toHaveBeenCalledWith({
       ...orderData,
       phone: orderData.phone.replace(/\D/g, ""),
-      postalCode: orderData.postalCode.replace("-", "")
+      postalCode: orderData.postalCode.replace(/-/g, "")
     });
 
     // Verify success message is shown

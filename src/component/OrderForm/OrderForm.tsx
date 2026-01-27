@@ -156,7 +156,7 @@ export function OrderForm({
       const normalizedData = {
         ...formData,
         phone: formData.phone.replace(/\D/g, ""),
-        postalCode: formData.postalCode.replace("-", "")
+        postalCode: formData.postalCode.replace(/-/g, "")
       };
 
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage()}`;
