@@ -21,17 +21,20 @@
   "devDependencies": {
     "@react-router/dev": "^7.7.1",
     "@tailwindcss/vite": "^4.1.4",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.1.0",
+    "@testing-library/user-event": "^14.4.3",
+    "@types/jest-axe": "^3.5.9",
     "@types/node": "^20",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "generate-react-cli": "^9.0.1",
+    "jest-axe": "^10.0.0",
+    "jsdom": "^27.4.0",
     "tailwindcss": "^4.1.4",
     "typescript": "^5.8.3",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^0.32.0",
-    "@testing-library/react": "^14.1.0",
-    "@testing-library/jest-dom": "^6.0.0",
-    "@testing-library/user-event": "^14.4.3"
+    "vitest": "^0.32.0"
   }
 }

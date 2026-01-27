@@ -1,13 +1,27 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
+import { Header } from "../../src/component/Header/Header";
+import { OrderForm } from "../../src/component/OrderForm/OrderForm";
+import { Gallery } from "../../src/component/Gallery/Gallery";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Roberta Furucho | Bonecas Artesanais" },
+    { name: "description", content: "Bonecas artesanais feitas à mão com amor e dedicação. Encomende sua boneca personalizada única." },
+    { property: "og:title", content: "Roberta Furucho | Bonecas Artesanais" },
+    { property: "og:description", content: "Bonecas artesanais feitas à mão com amor e dedicação." },
+    { property: "og:type", content: "website" },
+    { name: "theme-color", content: "#F4B8C5" },
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return (
+    <>
+      <Header />
+      <Welcome />
+      <Gallery />
+      <OrderForm />
+    </>
+  );
 }

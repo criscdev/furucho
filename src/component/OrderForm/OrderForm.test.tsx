@@ -1,68 +1,119 @@
-// @ts-nocheck
-import { describe, it, expect } from 'vitest';
-import { renderWithProviders, screen } from "../../test-utils";
-import { orderFactory } from "../../test/factories/orderFactory";
-import OrderForm from "./OrderForm";
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import { OrderForm } from './OrderForm';
+import { orderFactory } from '../../test/factories/orderFactory';
 
-describe("OrderForm", () => {
-    it("renders the form with all input fields and the submit button", () => {
-        renderWithProviders(<OrderForm />);
+expect.extend(toHaveNoViolations);
 
-        expect(screen.getByTestId("name")).toBeTruthy();
-        expect(screen.getByTestId("email")).toBeTruthy();
-        expect(screen.getByTestId("phone")).toBeTruthy();
-        expect(screen.getByTestId("address")).toBeTruthy();
-        expect(screen.getByTestId("postalCode")).toBeTruthy();
-        expect(screen.getByTestId("orderScope")).toBeTruthy();
-        expect(screen.getByTestId("orderScopeDetail")).toBeTruthy();
-        expect(screen.getByTestId("receiveDate")).toBeTruthy();
-        expect(screen.getByRole("button", { name: /enviar/i })).toBeTruthy();
+describe('OrderForm', () => {
+  it('renders the form with all labeled input fields', () => {
+    render(<OrderForm />);
+
+    expect(screen.getByRole('heading', { name: /faça sua encomenda/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/nome completo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/telefone/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/endereço completo/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/cep/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/tipo de boneca desejada/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/detalhes da boneca/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/data desejada para receber/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /enviar pelo whatsapp/i })).toBeInTheDocument();
+  });
+
+  it('marks required fields with aria-required', () => {
+    render(<OrderForm />);
+
+    expect(screen.getByLabelText(/nome completo/i)).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByLabelText(/telefone/i)).toHaveAttribute('aria-required', 'true');
+  });
+
+  it('shows validation errors for empty required fields on submit', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    expect(await screen.findByText(/nome é obrigatório/i)).toBeInTheDocument();
+    expect(screen.getByText(/email é obrigatório/i)).toBeInTheDocument();
+    expect(screen.getByText(/telefone é obrigatório/i)).toBeInTheDocument();
+  });
+
+  it('shows email validation error for invalid email', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.type(screen.getByLabelText(/^email/i), 'invalid-email');
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    expect(await screen.findByText(/email inválido/i)).toBeInTheDocument();
+  });
+
+  it('clears error when user starts typing in a field', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+    expect(await screen.findByText(/nome é obrigatório/i)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/nome completo/i), 'Maria');
+    expect(screen.queryByText(/nome é obrigatório/i)).not.toBeInTheDocument();
+  });
+
+  it('opens WhatsApp with formatted message on valid submission', async () => {
+    const user = userEvent.setup();
+    const mockOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const mockCallback = vi.fn();
+
+    render(<OrderForm onSubmitSuccess={mockCallback} />);
+
+    const orderData = orderFactory();
+
+    await user.type(screen.getByLabelText(/nome completo/i), orderData.name);
+    await user.type(screen.getByLabelText(/^email/i), orderData.email);
+    await user.type(screen.getByLabelText(/telefone/i), orderData.phone);
+    await user.type(screen.getByLabelText(/endereço completo/i), orderData.address);
+    await user.type(screen.getByLabelText(/cep/i), orderData.postalCode);
+    await user.type(screen.getByLabelText(/tipo de boneca desejada/i), orderData.orderScope);
+    await user.type(screen.getByLabelText(/detalhes da boneca/i), orderData.orderScopeDetail);
+    await user.type(screen.getByLabelText(/data desejada para receber/i), orderData.receiveDate);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    await waitFor(() => {
+      expect(mockOpen).toHaveBeenCalledWith(
+        expect.stringContaining('wa.me'),
+        '_blank',
+        'noopener,noreferrer'
+      );
     });
 
-    it("has required attributes on inputs", () => {
-        renderWithProviders(<OrderForm />);
+    expect(mockCallback).toHaveBeenCalledWith(orderData);
+    expect(await screen.findByText(/redirecionando para o whatsapp/i)).toBeInTheDocument();
 
-        expect(screen.getByTestId("name").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("email").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("phone").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("address").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("postalCode").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("orderScope").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("orderScopeDetail").getAttribute("required")).not.toBeNull();
-        expect(screen.getByTestId("receiveDate").getAttribute("required")).not.toBeNull();
+    mockOpen.mockRestore();
+  });
+
+  it('has accessible error messages linked via aria-describedby', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    await waitFor(() => {
+      const nameInput = screen.getByLabelText(/nome completo/i);
+      expect(nameInput).toHaveAttribute('aria-invalid', 'true');
+      expect(nameInput).toHaveAttribute('aria-describedby', 'name-error');
     });
+  });
 
-    it("applies maxlength and pattern attributes correctly", () => {
-        renderWithProviders(<OrderForm />);
-
-        const name = screen.getByTestId("name");
-        expect(name.getAttribute("maxLength")).toBe("200");
-
-        const email = screen.getByTestId("email");
-        expect(email.getAttribute("maxLength")).toBe("100");
-        expect(email.getAttribute("type")).toBe("email");
-        expect(email.getAttribute("pattern")).toBe("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$");
-
-        const phone = screen.getByTestId("phone");
-        expect(phone.getAttribute("maxLength")).toBe("11");
-        expect(phone.getAttribute("type")).toBe("tel");
-
-        const address = screen.getByTestId("address");
-        expect(address.getAttribute("maxLength")).toBe("200");
-
-        const postalCode = screen.getByTestId("postalCode");
-        expect(postalCode.getAttribute("maxLength")).toBe("10");
-        expect(postalCode.getAttribute("pattern")).toBe("[0-9]{10}");
-
-        const orderScope = screen.getByTestId("orderScope");
-        expect(orderScope.getAttribute("maxLength")).toBe("100");
-
-        const orderScopeDetail = screen.getByTestId("orderScopeDetail");
-        expect(orderScopeDetail.getAttribute("maxLength")).toBe("800");
-
-        const receiveDate = screen.getByTestId("receiveDate");
-        expect(receiveDate.getAttribute("maxLength")).toBe("10");
-        expect(receiveDate.getAttribute("pattern")).toBe("[0-9]{2}/[0-9]{2}/[0-9]{4}");
-        expect(receiveDate.getAttribute("type")).toBe("text");
-    });
+  it('has no accessibility violations', async () => {
+    const { container } = render(<OrderForm />);
+    const results = await axe(container);
+    
+    expect(results).toHaveNoViolations();
+  });
 });
