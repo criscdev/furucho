@@ -1,6 +1,6 @@
 package com.robertafurucho.security;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,6 +24,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    
+    @Value("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
@@ -32,6 +35,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Disable CSRF for stateless JWT API
+            // CSRF protection is not needed for stateless APIs using JWT tokens
+            // as there are no session cookies to protect
             .csrf(csrf -> csrf.disable())
             .cors(cors -> {})
             .authorizeHttpRequests(auth -> {
@@ -42,7 +48,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/health/**").permitAll();
                 
                 // H2 console - only if enabled (development)
-                if (isH2ConsoleEnabled()) {
+                if (h2ConsoleEnabled) {
                     auth.requestMatchers("/h2-console/**").permitAll();
                 }
                 
@@ -58,16 +64,11 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // Allow H2 console frames (only in development)
-        if (isH2ConsoleEnabled()) {
+        if (h2ConsoleEnabled) {
             http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
         }
 
         return http.build();
-    }
-
-    private boolean isH2ConsoleEnabled() {
-        // H2 console is enabled only if spring.h2.console.enabled is true
-        return Boolean.parseBoolean(System.getProperty("spring.h2.console.enabled", "false"));
     }
 
     @Bean
