@@ -14,6 +14,7 @@ export default defineConfig({
         'src/setupTests.ts',
         'src/test-utils.ts',
         'src/test/**',
+        'src/mocks/**',
         '**/*.test.{ts,tsx}',
         '**/*.d.ts',
       ],

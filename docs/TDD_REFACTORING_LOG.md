@@ -10,7 +10,7 @@
 - [x] **Batch 0A** — Corrigir infra existente (@ts-nocheck, vitest config, index.html)
 - [x] **Batch 0B** — Configurar cobertura (@vitest/coverage-v8)
 - [x] **Batch 0C** — Instalar e configurar Playwright
-- [ ] **Batch 0D** — Instalar e configurar MSW
+- [x] **Batch 0D** — Instalar e configurar MSW
 - [ ] **Batch 1A** — Fix `lang="en"` + testes root.tsx
 - [ ] **Batch 1B** — Fix focus OrderForm + teste
 - [ ] **Batch 1C** — Fix CORS duplicado
@@ -72,3 +72,15 @@
 - Atualizado `.gitignore` com artefatos Playwright
 
 **Resultado:** 6/6 Playwright testes ✅ (2 × 3 browsers) | 37/37 vitest ✅ | zero regressões
+
+---
+
+### Batch 0D — 2026-02-23
+
+**Alterações:**
+- Instalado `msw@2.12.10` (MSW v2 com `http` handlers)
+- Criado `src/mocks/handlers.ts` — handlers para 4 endpoints `/api/orders` (POST, GET, GET/:id, PATCH/:id/status), store in-memory com `resetOrders()`, tipagem `MockOrderResponse`
+- Criado `src/mocks/server.ts` — `setupServer()` com handlers exportado
+- Atualizado `src/setupTests.ts` — lifecycle MSW (`beforeAll` → `listen`, `afterEach` → `resetHandlers` + `resetOrders`, `afterAll` → `close`), `onUnhandledRequest: 'warn'` para não quebrar testes existentes
+
+**Resultado:** `npx tsc --noEmit` ✅ | 37/37 testes ✅ | zero regressões
