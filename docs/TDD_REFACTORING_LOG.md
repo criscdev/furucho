@@ -11,11 +11,11 @@
 - [x] **Batch 0B** — Configurar cobertura (@vitest/coverage-v8)
 - [x] **Batch 0C** — Instalar e configurar Playwright
 - [x] **Batch 0D** — Instalar e configurar MSW
-- [ ] **Batch 1A** — Fix `lang="en"` + testes root.tsx
-- [ ] **Batch 1B** — Fix focus OrderForm + teste
-- [ ] **Batch 1C** — Fix CORS duplicado
-- [ ] **Batch 1D** — Limpeza backend: Lombok + SuppressWarnings + Dockerfile Java 21
-- [ ] **Batch 1E** — Fix datas hardcoded em testes backend
+- [x] **Batch 1A** — Fix `lang="en"` + testes root.tsx
+- [x] **Batch 1B** — Fix focus OrderForm + teste
+- [x] **Batch 1C** — Fix CORS duplicado
+- [x] **Batch 1D** — Limpeza backend: Lombok + SuppressWarnings + Dockerfile Java 21
+- [x] **Batch 1E** — Fix datas hardcoded em testes backend
 - [ ] **Batch 2A** — OrderService: createOrder + normalizações
 - [ ] **Batch 2B** — OrderService: queries e update
 - [ ] **Batch 2C** — OrderController: endpoints faltantes
@@ -38,6 +38,7 @@
 ### Batch 0A — 2026-02-23
 
 **Alterações:**
+
 - `src/setupTests.ts`: removido `@ts-nocheck`, import side-effect mantido
 - `src/test-utils.ts`: removido `@ts-nocheck`, adicionado tipagem (`ReactElement`, `RenderOptions`), JSDoc
 - `vitest.config.ts`: substituído `export default {...} as any` por `defineConfig()` de `vitest/config`
@@ -50,6 +51,7 @@
 ### Batch 0B — 2026-02-23
 
 **Alterações:**
+
 - Instalado `@vitest/coverage-v8@0.32.4` (compatível com vitest 0.32)
 - Adicionado script `test:coverage` em `package.json`
 - Configurado provider v8 com reporters text/html/lcov e thresholds 80% em `vitest.config.ts`
@@ -64,6 +66,7 @@
 ### Batch 0C — 2026-02-23
 
 **Alterações:**
+
 - Instalado `@playwright/test@1.58.2` + browsers Chromium e Firefox
 - Criado `playwright.config.ts` com 3 projetos: Chromium, Firefox, Mobile Chrome (Pixel 5)
 - Criado `e2e/smoke.spec.ts` — 2 testes: heading visível + título da página
@@ -78,9 +81,74 @@
 ### Batch 0D — 2026-02-23
 
 **Alterações:**
+
 - Instalado `msw@2.12.10` (MSW v2 com `http` handlers)
 - Criado `src/mocks/handlers.ts` — handlers para 4 endpoints `/api/orders` (POST, GET, GET/:id, PATCH/:id/status), store in-memory com `resetOrders()`, tipagem `MockOrderResponse`
 - Criado `src/mocks/server.ts` — `setupServer()` com handlers exportado
 - Atualizado `src/setupTests.ts` — lifecycle MSW (`beforeAll` → `listen`, `afterEach` → `resetHandlers` + `resetOrders`, `afterAll` → `close`), `onUnhandledRequest: 'warn'` para não quebrar testes existentes
 
 **Resultado:** `npx tsc --noEmit` ✅ | 37/37 testes ✅ | zero regressões
+
+---
+
+### Batch 1A — 2026-02-23
+
+**TDD Cycle:**
+
+- RED: `app/root.test.tsx` — teste `lang="pt-BR"` falha (`lang="en"` encontrado)
+- GREEN: `app/root.tsx` — alterado `lang="en"` → `lang="pt-BR"`
+- Adicionado: 2 testes ErrorBoundary (404 route error + generic error)
+- Mock de componentes React Router (Meta, Links, Scripts, ScrollRestoration) para isolar Layout
+- `renderToStaticMarkup` para testar atributo `lang` no `<html>` sem conflito jsdom
+
+**Resultado:** `npx tsc --noEmit` ✅ | 40/40 testes ✅ | zero regressões
+
+---
+
+### Batch 1B — 2026-02-23
+
+**TDD Cycle:**
+
+- RED: teste `focuses the first invalid field on empty submit` falha — focus fica no botão submit
+- ROOT CAUSE: `handleSubmit` lia `Object.keys(errors)` (state stale) ao invés do `newErrors` retornado por `validateForm()`
+- GREEN: `validateForm()` agora retorna `FormErrors` (não `boolean`); `handleSubmit` usa o objeto retornado diretamente
+- Todos os 9 testes existentes do OrderForm continuam passando
+
+**Resultado:** `npx tsc --noEmit` ✅ | 41/41 testes ✅ | zero regressões
+
+---
+
+### Batch 1C — 2026-02-23
+
+**Alterações:**
+
+- Removido `@CrossOrigin(origins = {...})` de `OrderController.java` — redundante com `WebConfig.corsConfigurer()`
+- `WebConfig` já cobre `/api/**` com localhost + produção, métodos, headers, credentials, maxAge
+- A anotação no controller era um subconjunto (só localhost, sem métodos/headers explícitos)
+
+**Resultado:** `./mvnw clean test` ✅ (8/8) | zero regressões
+
+---
+
+### Batch 1D — 2026-02-23
+
+**Alterações:**
+
+- Removido Lombok do `pom.xml` (dependência + plugin exclusion) — zero `import lombok` no código-fonte
+- Removido `@SuppressWarnings("null")` de `OrderService.java` e `OrderControllerTest.java`
+- Atualizado `backend/Dockerfile`: `eclipse-temurin:17-jdk-alpine` → `21-jdk-alpine`, `17-jre-alpine` → `21-jre-alpine`
+
+**Resultado:** `./mvnw clean test` ✅ (8/8) | zero regressões
+
+---
+
+### Batch 1E — 2026-02-23
+
+**Alterações:**
+
+- Substituído `LocalDate.of(2027, 3, 15)` e `"2027-03-15"` por constantes dinâmicas em `OrderControllerTest.java`
+- Adicionado `FUTURE_DATE = LocalDate.now().plusMonths(6)` e `FUTURE_DATE_STR = FUTURE_DATE.toString()`
+- JSON text blocks usam `"%s".formatted(FUTURE_DATE_STR)` para interpolação
+- Grep por datas literais retorna zero resultados
+
+**Resultado:** `./mvnw clean test` ✅ (8/8) | zero regressões
