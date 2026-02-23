@@ -4,12 +4,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service layer for order business logic.
  */
 @Service
-@SuppressWarnings("null")
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -63,6 +63,7 @@ public class OrderService {
      */
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long id) {
+        Objects.requireNonNull(id, "Order ID must not be null");
         return orderRepository.findById(id)
             .map(OrderResponse::fromEntity)
             .orElseThrow(() -> new OrderNotFoundException(id));
@@ -91,6 +92,7 @@ public class OrderService {
      */
     @Transactional
     public OrderResponse updateOrderStatus(Long id, OrderStatus status) {
+        Objects.requireNonNull(id, "Order ID must not be null");
         Order order = orderRepository.findById(id)
             .orElseThrow(() -> new OrderNotFoundException(id));
         order.setStatus(status);
