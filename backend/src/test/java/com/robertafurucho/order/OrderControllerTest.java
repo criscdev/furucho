@@ -41,7 +41,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos, olhos verdes",
-            LocalDate.of(2025, 3, 15),
+            LocalDate.of(2027, 3, 15),
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
@@ -59,7 +59,7 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "2027-03-15"
                     }
                     """))
             .andExpect(status().isCreated())
@@ -81,7 +81,7 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "2027-03-15"
                     }
                     """))
             .andExpect(status().isBadRequest())
@@ -100,7 +100,7 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "2027-03-15"
                     }
                     """))
             .andExpect(status().isBadRequest())
@@ -119,7 +119,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos",
-            LocalDate.of(2025, 3, 15),
+            LocalDate.of(2027, 3, 15),
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
