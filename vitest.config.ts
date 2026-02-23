@@ -1,9 +1,9 @@
-// Export a plain config object to avoid requiring 'vitest/config' at compile time
-// (this keeps the same runtime config for Vitest when it's installed locally).
-export default {
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.ts'
-  }
-} as any;
+    setupFiles: './src/setupTests.ts',
+  },
+});
