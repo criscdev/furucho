@@ -21,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class OrderController {
 
     private final OrderService orderService;
