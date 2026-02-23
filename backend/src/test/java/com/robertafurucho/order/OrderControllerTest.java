@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -19,9 +20,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Unit tests for OrderController.
  */
-@WebMvcTest(OrderController.class)
 @SuppressWarnings("null")
+@WebMvcTest(OrderController.class)
 class OrderControllerTest {
+
+    /** Always-future date so @Future validation never flakes. */
+    private static final LocalDate FUTURE_DATE = LocalDate.now().plusMonths(6);
+    private static final String FUTURE_DATE_STR = Objects.requireNonNull(FUTURE_DATE.toString());
 
     @Autowired
     private MockMvc mockMvc;
@@ -41,7 +46,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos, olhos verdes",
-            LocalDate.of(2027, 3, 15),
+            FUTURE_DATE,
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
@@ -49,7 +54,7 @@ class OrderControllerTest {
 
         // Act & Assert
         mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content("""
                     {
                         "name": "Maria da Silva",
@@ -59,9 +64,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2027-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(FUTURE_DATE_STR)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.name").value("Maria da Silva"))
@@ -71,8 +76,8 @@ class OrderControllerTest {
     @Test
     void createOrder_WithInvalidEmail_ReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(("""
                     {
                         "name": "Maria da Silva",
                         "email": "invalid-email",
@@ -81,9 +86,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2027-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(FUTURE_DATE_STR))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.fieldErrors.email").exists());
     }
@@ -91,7 +96,7 @@ class OrderControllerTest {
     @Test
     void createOrder_WithMissingName_ReturnsBadRequest() throws Exception {
         mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content("""
                     {
                         "email": "maria@exemplo.com",
@@ -100,9 +105,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2027-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(FUTURE_DATE_STR)))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.fieldErrors.name").exists());
     }
@@ -119,7 +124,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos",
-            LocalDate.of(2027, 3, 15),
+            FUTURE_DATE,
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
