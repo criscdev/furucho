@@ -4,3 +4,9 @@
 # React Router
 /.react-router/
 /build/
+
+# Test coverage
+/coverage/
+
+# Java build artifacts
+backend/target/
