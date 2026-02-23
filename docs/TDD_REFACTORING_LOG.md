@@ -9,7 +9,7 @@
 
 - [x] **Batch 0A** — Corrigir infra existente (@ts-nocheck, vitest config, index.html)
 - [x] **Batch 0B** — Configurar cobertura (@vitest/coverage-v8)
-- [ ] **Batch 0C** — Instalar e configurar Playwright
+- [x] **Batch 0C** — Instalar e configurar Playwright
 - [ ] **Batch 0D** — Instalar e configurar MSW
 - [ ] **Batch 1A** — Fix `lang="en"` + testes root.tsx
 - [ ] **Batch 1B** — Fix focus OrderForm + teste
@@ -58,3 +58,17 @@
 **Baseline de cobertura:** 97.32% stmts | 90.62% branches | 100% funcs | 97.32% lines
 
 **Resultado:** `npm run typecheck` ✅ | `npm run test:coverage` ✅ | 37/37 testes ✅
+
+---
+
+### Batch 0C — 2026-02-23
+
+**Alterações:**
+- Instalado `@playwright/test@1.58.2` + browsers Chromium e Firefox
+- Criado `playwright.config.ts` com 3 projetos: Chromium, Firefox, Mobile Chrome (Pixel 5)
+- Criado `e2e/smoke.spec.ts` — 2 testes: heading visível + título da página
+- Adicionado scripts `test:e2e` e `test:e2e:ui` em `package.json`
+- Adicionado `exclude: ['e2e/**']` em `vitest.config.ts` para evitar conflito
+- Atualizado `.gitignore` com artefatos Playwright
+
+**Resultado:** 6/6 Playwright testes ✅ (2 × 3 browsers) | 37/37 vitest ✅ | zero regressões
