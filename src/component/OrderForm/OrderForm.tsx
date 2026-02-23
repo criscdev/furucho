@@ -74,7 +74,7 @@ export function OrderForm({
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
@@ -120,7 +120,7 @@ export function OrderForm({
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const formatWhatsAppMessage = (): string => {
@@ -141,13 +141,10 @@ export function OrderForm({
     e.preventDefault();
     setSubmitStatus("idle");
 
-    if (!validateForm()) {
-      // Focus first error field
-      const firstErrorField = Object.keys(errors)[0];
-      if (firstErrorField) {
-        const element = document.getElementById(firstErrorField);
-        element?.focus();
-      }
+    const formErrors = validateForm();
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length > 0) {
+      document.getElementById(errorKeys[0])?.focus();
       return;
     }
 

@@ -116,4 +116,15 @@ describe('OrderForm', () => {
     
     expect(results).toHaveNoViolations();
   });
+
+  it('focuses the first invalid field on empty submit', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/nome completo/i)).toHaveFocus();
+    });
+  });
 });
