@@ -16,8 +16,8 @@
 - [x] **Batch 1C** — Fix CORS duplicado
 - [x] **Batch 1D** — Limpeza backend: Lombok + SuppressWarnings + Dockerfile Java 21
 - [x] **Batch 1E** — Fix datas hardcoded em testes backend
-- [ ] **Batch 2A** — OrderService: createOrder + normalizações
-- [ ] **Batch 2B** — OrderService: queries e update
+- [x] **Batch 2A** — OrderService: createOrder + normalizações
+- [x] **Batch 2B** — OrderService: queries e update
 - [ ] **Batch 2C** — OrderController: endpoints faltantes
 - [ ] **Batch 2D** — Rate limiting: testes + extração
 - [ ] **Batch 2E** — Integração backend + Repository
@@ -152,3 +152,38 @@
 - Grep por datas literais retorna zero resultados
 
 **Resultado:** `./mvnw clean test` ✅ (8/8) | zero regressões
+
+---
+
+### Batch 2A — 2026-02-23
+
+**TDD Cycle:** GREEN (testes escritos cobrindo código já existente no service)
+
+**Alterações:**
+
+- Criado `OrderServiceTest.java` com `@Nested class CreateOrder` contendo 6 testes:
+  - `mapsAllFields` — todos os campos do request mapeados para a entidade
+  - `setsStatusPending` — status inicial sempre PENDING
+  - `returnsResponse` — response com ID da entidade salva
+  - `normalizesPhone` — strips non-digits (ex: `(11) 98765-4321` → `11987654321`)
+  - `normalizesCep` — remove hífen (ex: `01234-567` → `01234567`)
+  - `keepsCepWithoutHyphen` — CEP sem hífen permanece inalterado
+- Javadoc já presente em todos os métodos do `OrderService`
+
+**Resultado:** `./mvnw test` ✅ (14/14) | zero regressões
+
+---
+
+### Batch 2B — 2026-02-23
+
+**TDD Cycle:** GREEN (tests written for existing service methods)
+
+**Alterações:**
+
+- Adicionado helper `buildOrder(id, email, status)` no `OrderServiceTest.java`
+- Adicionado `@Nested class GetAllOrders` (3 testes): empty list, mapeamento, preservação de ordem
+- Adicionado `@Nested class GetOrderById` (3 testes): happy path, `OrderNotFoundException`, mensagem da exception contém o ID
+- Adicionado `@Nested class GetOrdersByEmail` (2 testes): filtro por email, lista vazia
+- Adicionado `@Nested class UpdateOrderStatus` (3 testes): atualiza status, persiste no repo, `OrderNotFoundException`
+
+**Resultado:** `./mvnw test` ✅ (25/25) | zero regressões
