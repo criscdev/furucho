@@ -509,7 +509,7 @@ Batch 5A                     (Fechamento — final)
 > Atualizar este checklist conforme batches são executados.
 
 - [x] **Batch 0A** — Corrigir infra existente (@ts-nocheck, vitest config, index.html)
-- [ ] **Batch 0B** — Configurar cobertura (@vitest/coverage-v8)
+- [x] **Batch 0B** — Configurar cobertura (@vitest/coverage-v8)
 - [ ] **Batch 0C** — Instalar e configurar Playwright
 - [ ] **Batch 0D** — Instalar e configurar MSW
 - [ ] **Batch 1A** — Fix `lang="en"` + testes root.tsx
@@ -538,9 +538,6 @@ Batch 5A                     (Fechamento — final)
 
 > Cada batch executado será registrado aqui com: data, o que foi feito, resultado dos testes.
 
-*(vazio — execução ainda não iniciou)*
-
-### Batch 0A — 2026-02-23
 
 **Alterações:**
 - `src/setupTests.ts`: removido `@ts-nocheck`, import side-effect mantido
@@ -549,3 +546,15 @@ Batch 5A                     (Fechamento — final)
 - `src/index.html`: deletado (órfão — referenciava `/src/main.jsx` inexistente)
 
 **Resultado:** `npm run typecheck` ✅ | 37/37 testes ✅ | zero regressões
+
+### Batch 0B — 2026-02-23
+
+**Alterações:**
+- Instalado `@vitest/coverage-v8@0.32.4` (compatível com vitest 0.32)
+- Adicionado script `test:coverage` em `package.json`
+- Configurado provider v8 com reporters text/html/lcov e thresholds 80% em `vitest.config.ts`
+- Nota: vitest 0.32 usa `lines`/`functions`/`branches`/`statements` como props flat (não `thresholds: {}`)
+
+**Baseline de cobertura:** 97.32% stmts | 90.62% branches | 100% funcs | 97.32% lines
+
+**Resultado:** `npm run typecheck` ✅ | `npm run test:coverage` ✅ | 37/37 testes ✅
