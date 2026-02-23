@@ -18,7 +18,7 @@
 - [x] **Batch 1E** — Fix datas hardcoded em testes backend
 - [x] **Batch 2A** — OrderService: createOrder + normalizações
 - [x] **Batch 2B** — OrderService: queries e update
-- [ ] **Batch 2C** — OrderController: endpoints faltantes
+- [x] **Batch 2C** — OrderController: endpoints faltantes
 - [ ] **Batch 2D** — Rate limiting: testes + extração
 - [ ] **Batch 2E** — Integração backend + Repository
 - [ ] **Batch 3A** — Welcome component: testes
@@ -187,3 +187,24 @@
 - Adicionado `@Nested class UpdateOrderStatus` (3 testes): atualiza status, persiste no repo, `OrderNotFoundException`
 
 **Resultado:** `./mvnw test` ✅ (25/25) | zero regressões
+
+---
+
+### Batch 2C — 2026-02-23
+
+**TDD Cycle:** RED→GREEN (new tests written for untested controller paths)
+
+**Alterações:**
+
+- `GlobalExceptionHandler.java`: adicionado `@ExceptionHandler(MethodArgumentTypeMismatchException.class)` → retorna 400 com `"Parâmetro inválido"` (em vez de cair no catch-all 500)
+- `OrderControllerTest.java` — 8 novos testes:
+  - `getAllOrders_ReturnsListOfOrders` — lista de 2 pedidos, verifica status 200, tamanho e campos
+  - `getAllOrders_WhenEmpty_ReturnsEmptyList` — lista vazia retorna `[]` com 200
+  - `updateOrderStatus_WithValidStatus_ReturnsUpdatedOrder` — PATCH status válido retorna 200 + status atualizado
+  - `updateOrderStatus_WhenNotFound_ReturnsNotFound` — OrderNotFoundException → 404
+  - `updateOrderStatus_WithInvalidStatus_ReturnsBadRequest` — enum inválido → 400 `"Parâmetro inválido"`
+  - `createOrder_WithPastDate_ReturnsBadRequest` — `@Future` violation → 400 + `fieldErrors.receiveDate`
+  - `createOrder_WithInvalidPhone_ReturnsBadRequest` — `@Pattern` violation → 400 + `fieldErrors.phone`
+  - `createOrder_WithNameTooLong_ReturnsBadRequest` — `@Size(max=200)` violation → 400 + `fieldErrors.name`
+
+**Resultado:** `./mvnw test` ✅ (33/33) | zero regressões
