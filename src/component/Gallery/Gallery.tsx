@@ -14,6 +14,8 @@
  * <Gallery items={dollPhotos} />
  */
 
+import { useId } from 'react';
+
 export interface GalleryItem {
   /** Unique identifier */
   id: string;
@@ -76,6 +78,8 @@ export function Gallery({
   items = defaultItems, 
   heading = "Galeria de Trabalhos" 
 }: GalleryProps) {
+  const headingId = useId();
+
   if (items.length === 0) {
     return null;
   }
@@ -83,10 +87,10 @@ export function Gallery({
   return (
     <section 
       className="max-w-6xl mx-auto px-4 py-12"
-      aria-labelledby="gallery-heading"
+      aria-labelledby={headingId}
     >
       <h2 
-        id="gallery-heading"
+        id={headingId}
         className="text-2xl font-bold mb-8 text-center"
         style={{ color: 'var(--color-text-heading)' }}
       >

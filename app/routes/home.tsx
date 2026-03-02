@@ -1,3 +1,13 @@
+/**
+ * Home — Landing page route composing all top-level sections.
+ *
+ * Renders Header, Welcome hero, Gallery, and OrderForm in sequence.
+ * Exports `meta()` for SEO (title, description, Open Graph, theme-color).
+ *
+ * @see Welcome — Hero section with CTA
+ * @see Gallery — Image grid of handmade dolls
+ * @see OrderForm — WhatsApp order form
+ */
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { Header } from "../../src/component/Header/Header";

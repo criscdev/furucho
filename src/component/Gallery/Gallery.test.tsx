@@ -77,11 +77,17 @@ describe('Gallery', () => {
     expect(instagramLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
-  it('uses semantic section with aria-labelledby', () => {
+  it('uses semantic section with aria-labelledby linked to heading', () => {
     const { container } = render(<Gallery items={mockItems} />);
     
     const section = container.querySelector('section');
-    expect(section).toHaveAttribute('aria-labelledby', 'gallery-heading');
+    const labelledBy = section?.getAttribute('aria-labelledby');
+    expect(labelledBy).toBeTruthy();
+    
+    // The id should match the heading element's id (dynamic via useId)
+    const heading = container.querySelector(`#${CSS.escape(labelledBy!)}`);
+    expect(heading).toBeInTheDocument();
+    expect(heading?.textContent).toBe('Galeria de Trabalhos');
   });
 
   it('renders list with aria-label for screen readers', () => {

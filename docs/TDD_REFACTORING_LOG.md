@@ -24,8 +24,8 @@
 - [x] **Batch 3A** — Welcome component: testes
 - [x] **Batch 3B** — Decompor OrderForm: hook de validação
 - [x] **Batch 3C** — Decompor OrderForm: utility WhatsApp
-- [ ] **Batch 3D** — OrderForm: validações faltantes
-- [ ] **Batch 3E** — Home route + Gallery useId
+- [x] **Batch 3D** — OrderForm: validações faltantes
+- [x] **Batch 3E** — Home route + Gallery useId
 - [ ] **Batch 4A** — E2E P0: Happy path + validação
 - [ ] **Batch 4B** — E2E P0: Keyboard + a11y
 - [ ] **Batch 4C** — E2E P1-P2: Secundários
@@ -298,3 +298,31 @@
 - `OrderForm.tsx` — refatorado para importar utility (348 → 334 linhas, −14)
 
 **Resultado:** `npx vitest run` ✅ (81/81) | zero regressões | 0 Problems
+
+### Batch 3D — 2026-03-02
+
+**TDD Cycle:** GREEN (teste cobrindo path de erro existente)
+
+**Alterações:**
+
+- `OrderForm.test.tsx` — +1 teste:
+  - `shows error alert when window.open throws`: mock `window.open` → throw → verifica `role="alert"` com "Erro ao processar"
+- Tasks 3D.1-3D.4 (telefone, CEP, data, nome) já cobertas em `useOrderFormValidation.test.ts` (Batch 3B)
+
+**Resultado:** `npx vitest run` ✅ (82/82) | zero regressões | 0 Problems
+
+### Batch 3E — 2026-03-02
+
+**TDD Cycle:** RED → GREEN + REFACTOR
+
+**Alterações:**
+
+- `app/routes/home.test.tsx` (novo) — 9 testes:
+  - **meta()**: título com "Roberta Furucho", description, Open Graph tags (title/desc/type), theme-color
+  - **Composição**: renderiza Header (navigation), Welcome (h1), Gallery (h2), OrderForm (h2)
+  - **Accessibility**: axe audit sem violações
+- `Gallery.tsx` — `id="gallery-heading"` estático → `useId()` dinâmico (evita colisão de IDs)
+- `Gallery.test.tsx` — atualizado teste `aria-labelledby` para verificar ligação dinâmica heading↔section
+- `home.tsx` — JSDoc adicionado (composição, SEO, referências @see)
+
+**Resultado:** `npx vitest run` ✅ (91/91) | zero regressões | 0 Problems
