@@ -21,9 +21,9 @@
 - [x] **Batch 2C** — OrderController: endpoints faltantes
 - [x] **Batch 2D** — Rate limiting: testes + extração
 - [x] **Batch 2E** — Integração backend + Repository
-- [ ] **Batch 3A** — Welcome component: testes
-- [ ] **Batch 3B** — Decompor OrderForm: hook de validação
-- [ ] **Batch 3C** — Decompor OrderForm: utility WhatsApp
+- [x] **Batch 3A** — Welcome component: testes
+- [x] **Batch 3B** — Decompor OrderForm: hook de validação
+- [x] **Batch 3C** — Decompor OrderForm: utility WhatsApp
 - [ ] **Batch 3D** — OrderForm: validações faltantes
 - [ ] **Batch 3E** — Home route + Gallery useId
 - [ ] **Batch 4A** — E2E P0: Happy path + validação
@@ -266,3 +266,35 @@
 - JSDoc já existente em `welcome.tsx` — nenhuma alteração necessária
 
 **Resultado:** `npx vitest run` ✅ (58/58) | `tsc --noEmit` ✅ | `./mvnw test` ✅ (49/49) | 0 Problems | dev server + browser ✅
+
+### Batch 3B — 2026-03-02
+
+**TDD Cycle:** RED → GREEN → REFACTOR (hook extraído de componente existente)
+
+**Alterações:**
+
+- `useOrderFormValidation.test.ts` (novo) — 17 testes com Vitest + RTL (`renderHook`):
+  - Estado inicial: todos os campos vazios, sem erros
+  - `handleChange`: atualiza campo e limpa erro ao editar
+  - `validate`: nome obrigatório, email formato, telefone 10-11 dígitos, CEP 8 dígitos, data DD/MM/AAAA, endereço obrigatório, escopo obrigatório, múltiplos erros simultâneos
+  - Regex: rejeita telefone com letras, CEP curto, data inválida
+- `useOrderFormValidation.ts` (novo) — custom hook extraído de `OrderForm.tsx`:
+  - `formData`, `errors`, `handleChange`, `validate` retornados
+  - Lógica de validação idêntica à original
+- `OrderForm.tsx` — refatorado para usar `useOrderFormValidation()` (427 → 348 linhas, −79)
+
+**Resultado:** `npx vitest run` ✅ (75/75) | zero regressões | 0 Problems
+
+### Batch 3C — 2026-03-02
+
+**TDD Cycle:** RED → GREEN → REFACTOR (utility extraída de componente existente)
+
+**Alterações:**
+
+- `formatWhatsAppMessage.test.ts` (novo) — 6 testes:
+  - Retorno URI-encoded, todos os campos presentes, labels bold (*Nome:*, etc.), header com emoji 🧸, caracteres especiais, campos vazios
+- `formatWhatsAppMessage.ts` (novo) — utility pura com JSDoc:
+  - Recebe `OrderFormData`, retorna `encodeURIComponent(...)` da mensagem formatada
+- `OrderForm.tsx` — refatorado para importar utility (348 → 334 linhas, −14)
+
+**Resultado:** `npx vitest run` ✅ (81/81) | zero regressões | 0 Problems

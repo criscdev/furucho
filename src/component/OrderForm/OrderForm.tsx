@@ -17,6 +17,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useOrderFormValidation } from "./useOrderFormValidation";
+import { formatWhatsAppMessage } from "./formatWhatsAppMessage";
 
 export interface OrderFormData {
   name: string;
@@ -43,20 +44,6 @@ export function OrderForm({
   const { formData, errors, handleChange, validate } = useOrderFormValidation();
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
-  const formatWhatsAppMessage = (): string => {
-    return encodeURIComponent(
-      `🧸 *Nova Encomenda de Boneca*\n\n` +
-      `*Nome:* ${formData.name}\n` +
-      `*Email:* ${formData.email}\n` +
-      `*Telefone:* ${formData.phone}\n` +
-      `*Endereço:* ${formData.address}\n` +
-      `*CEP:* ${formData.postalCode}\n\n` +
-      `*Resumo:* ${formData.orderScope}\n` +
-      `*Detalhes:* ${formData.orderScopeDetail}\n\n` +
-      `*Data desejada:* ${formData.receiveDate}`
-    );
-  };
-
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitStatus("idle");
@@ -69,7 +56,7 @@ export function OrderForm({
     }
 
     try {
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage()}`;
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage(formData)}`;
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
       setSubmitStatus("success");
       onSubmitSuccess?.(formData);
