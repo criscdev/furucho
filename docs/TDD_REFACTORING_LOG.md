@@ -208,3 +208,17 @@
   - `createOrder_WithNameTooLong_ReturnsBadRequest` — `@Size(max=200)` violation → 400 + `fieldErrors.name`
 
 **Resultado:** `./mvnw test` ✅ (33/33) | zero regressões
+
+### Batch 2D — 2026-02-28
+
+**TDD Cycle:** REFACTOR (extract rate limiting out of `OrderController`)
+
+**Alterações:**
+
+- `RateLimitingFilter.java` (novo) — classe avulsa (sem `@Component`); rate limit de 5 req/min por IP; `ConcurrentHashMap` para buckets por IP; `extractClientIp()` respeita `X-Forwarded-For`; `resetBuckets()` package-private para testes
+- `WebConfig.java` — adicionado bean `FilterRegistrationBean<RateLimitingFilter>` registrado para `/api/orders` e `/api/orders/` com `order=1`; mantém `@WebMvcTest` isolado (filtro não carregado automaticamente)
+- `OrderController.java` — removidos todos os imports e lógica de bucket4j; `createOrder()` simplificado a `@RequestBody` apenas, retorna `ResponseEntity<OrderResponse>` (sem wildcard)
+- `RateLimitingFilterTest.java` (novo) — 5 testes: `firstFiveRequests_AreAllowed`, `sixthRequest_ReturnsTooManyRequests`, `getRequests_AreNotRateLimited`, `xForwardedFor_SeparatesBucketsPerIp`, `extractClientIp_UsesFirstForwardedIp`
+- `pom.xml` — `maven-compiler-plugin` pinado em `3.13.0` (workaround para compatibilidade)
+
+**Resultado:** `./mvnw test` ✅ (38/38) | zero regressões
