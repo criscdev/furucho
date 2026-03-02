@@ -26,9 +26,9 @@
 - [x] **Batch 3C** — Decompor OrderForm: utility WhatsApp
 - [x] **Batch 3D** — OrderForm: validações faltantes
 - [x] **Batch 3E** — Home route + Gallery useId
-- [ ] **Batch 4A** — E2E P0: Happy path + validação
-- [ ] **Batch 4B** — E2E P0: Keyboard + a11y
-- [ ] **Batch 4C** — E2E P1-P2: Secundários
+- [x] **Batch 4A** — E2E P0: Happy path + validação
+- [x] **Batch 4B** — E2E P0: Keyboard + a11y
+- [x] **Batch 4C** — E2E P1-P2: Secundários
 - [ ] **Batch 5A** — CI + documentação final
 
 ---
@@ -326,3 +326,35 @@
 - `home.tsx` — JSDoc adicionado (composição, SEO, referências @see)
 
 **Resultado:** `npx vitest run` ✅ (91/91) | zero regressões | 0 Problems
+
+### Batch 4A–4C — 2026-03-02
+
+**TDD Cycle:** RED → GREEN (E2E specs + contrast fix)
+
+**Fix de contraste WCAG AA (P0):**
+
+- `app.css`: `--color-focus` escurecido de `#9D6BA8` → `#7B508C` (amethyst profundo)
+  - Sobre cream `#FFFAF5`: 3.96:1 → **5.99:1** ✅
+  - Sob white `#FFFFFF`: 4.11:1 → **6.23:1** ✅
+  - Mesma família de matiz (~290° purple), mantém estética artesanal
+- `--color-focus-ring` atualizado para `rgba(123, 80, 140, 0.5)`
+- Dependência: `@axe-core/playwright@4.11.1` adicionada (E2E a11y audits)
+
+**E2E specs criados:**
+
+- `e2e/happy-path.spec.ts` — 3 testes (Batch 4A):
+  - Página carrega + form visível
+  - Preenche form → submit → WhatsApp redirect + success message
+  - Submit vazio → erros → corrige nome → erro limpa, outros permanecem
+- `e2e/a11y.spec.ts` — 5 testes (Batch 4B):
+  - Tab: skip link → Tab through page → CTA "Fazer Encomenda" alcançável
+  - axe scan 3 viewports: desktop 1280px, tablet 768px, mobile 375px — 0 violações
+  - Skip link Tab → Enter → `#main` visível
+- `e2e/secondary.spec.ts` — 4 testes (Batch 4C):
+  - CTA scroll → `#order-form` in viewport
+  - Gallery single-column em 375px
+  - Meta tags SEO (title, description, OG, theme-color)
+  - Instagram links security attrs (target, rel)
+- `e2e/smoke.spec.ts` — 2 testes (já existente)
+
+**Resultado:** `npx vitest run` ✅ (91/91) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
