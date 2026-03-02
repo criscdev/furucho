@@ -41,7 +41,7 @@ export function OrderForm({
   whatsappNumber = "5511999999999",
   onSubmitSuccess 
 }: OrderFormProps) {
-  const { formData, errors, handleChange, validate } = useOrderFormValidation();
+  const { formData, errors, handleChange, validate, reset } = useOrderFormValidation();
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -57,9 +57,17 @@ export function OrderForm({
 
     try {
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage(formData)}`;
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      const win = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+      if (!win) {
+        // Popup was blocked — treat as error so user is informed
+        setSubmitStatus("error");
+        return;
+      }
+
       setSubmitStatus("success");
       onSubmitSuccess?.(formData);
+      reset();
     } catch {
       setSubmitStatus("error");
     }
@@ -294,7 +302,7 @@ export function OrderForm({
                 className="form-input"
                 aria-required="true"
                 aria-invalid={!!errors.receiveDate}
-                aria-describedby="receiveDate-hint receiveDate-error"
+                aria-describedby={`receiveDate-hint${errors.receiveDate ? ' receiveDate-error' : ''}`}
                 placeholder="DD/MM/AAAA"
                 maxLength={10}
               />

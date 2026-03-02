@@ -24,11 +24,11 @@ describe('ErrorBoundary', () => {
     render(<ErrorBoundary error={routeError as never} params={{}} />);
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('404');
-    expect(screen.getByText(/requested page could not be found/i)).toBeInTheDocument();
+    expect(screen.getByText(/página solicitada não foi encontrada/i)).toBeInTheDocument();
   });
 
   it('renders generic message for unknown errors', () => {
     render(<ErrorBoundary error={new Error('kaboom')} params={{}} />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Oops!');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Ops!');
   });
 });

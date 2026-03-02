@@ -18,11 +18,9 @@ test.describe('Secondary flows', () => {
     const ctaButton = page.getByRole('button', { name: /fazer encomenda/i });
     await ctaButton.click();
 
-    // Wait for smooth scroll to complete
-    await page.waitForTimeout(500);
-
+    // Wait for smooth scroll to complete (no waitForTimeout)
     const orderForm = page.locator('#order-form');
-    await expect(orderForm).toBeInViewport();
+    await expect(orderForm).toBeInViewport({ timeout: 3000 });
   });
 
   // 4C.2

@@ -1,11 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
 import { Welcome } from './welcome';
 
 expect.extend(toHaveNoViolations);
 
 describe('Welcome', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   // ── Hero Section ──────────────────────────────────────────────
 
   it('renders the page heading with brand name', () => {
@@ -37,7 +41,7 @@ describe('Welcome', () => {
     expect(cta).toHaveAttribute('type', 'button');
   });
 
-  it('scrolls to #order-form and focuses it on CTA click', () => {
+  it('scrolls to #order-form and focuses it on CTA click', async () => {
     const scrollIntoViewMock = vi.fn();
     const focusMock = vi.fn();
     const fakeElement = {
@@ -47,26 +51,24 @@ describe('Welcome', () => {
 
     vi.spyOn(document, 'getElementById').mockReturnValue(fakeElement);
 
+    const user = userEvent.setup();
     render(<Welcome />);
-    fireEvent.click(screen.getByRole('button', { name: /fazer encomenda/i }));
+    await user.click(screen.getByRole('button', { name: /fazer encomenda/i }));
 
     expect(document.getElementById).toHaveBeenCalledWith('order-form');
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
     expect(focusMock).toHaveBeenCalled();
-
-    vi.restoreAllMocks();
   });
 
-  it('does not throw when #order-form element is absent', () => {
+  it('does not throw when #order-form element is absent', async () => {
     vi.spyOn(document, 'getElementById').mockReturnValue(null);
 
+    const user = userEvent.setup();
     render(<Welcome />);
 
-    expect(() => {
-      fireEvent.click(screen.getByRole('button', { name: /fazer encomenda/i }));
-    }).not.toThrow();
-
-    vi.restoreAllMocks();
+    await expect(
+      user.click(screen.getByRole('button', { name: /fazer encomenda/i }))
+    ).resolves.not.toThrow();
   });
 
   // ── Instagram Link ────────────────────────────────────────────
@@ -132,11 +134,11 @@ describe('Welcome', () => {
 
   // ── Semantic Structure ────────────────────────────────────────
 
-  it('renders main landmark with id "main"', () => {
-    render(<Welcome />);
+  it('renders as a non-landmark div (main is in Home route)', () => {
+    const { container } = render(<Welcome />);
 
-    const main = screen.getByRole('main');
-    expect(main).toHaveAttribute('id', 'main');
+    // Welcome no longer owns <main>; Home wraps all sections
+    expect(container.querySelector('main')).not.toBeInTheDocument();
   });
 
   it('hero section uses aria-labelledby pointing to heading', () => {

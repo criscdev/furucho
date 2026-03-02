@@ -30,7 +30,7 @@ test.describe('Happy path & validation', () => {
       (window as unknown as Record<string, unknown>).__whatsappUrl = '';
       window.open = (url?: string | URL) => {
         (window as unknown as Record<string, unknown>).__whatsappUrl = String(url ?? '');
-        return null;
+        return {} as Window; // Return truthy to signal popup succeeded
       };
     });
 

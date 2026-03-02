@@ -74,11 +74,15 @@ test.describe('Keyboard & accessibility', () => {
 
     await page.keyboard.press('Enter');
 
-    // After clicking skip link, the main element should receive focus (or be scrolled to)
+    // After clicking skip link, the main element should receive focus
     const main = page.locator('#main');
     await expect(main).toBeVisible();
 
     // The URL should now have #main hash
     expect(page.url()).toContain('#main');
+
+    // If main has tabIndex=-1, the browser should focus it
+    const focusedId = await page.evaluate(() => document.activeElement?.id);
+    expect(focusedId).toBe('main');
   });
 });

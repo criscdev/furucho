@@ -68,7 +68,8 @@ public class RateLimitingFilter implements Filter {
             return t;
         });
         evictionScheduler.scheduleAtFixedRate(
-            buckets::clear,
+            () -> buckets.entrySet().removeIf(e ->
+                    e.getValue().getAvailableTokens() >= CAPACITY),
             REFILL_PERIOD.toSeconds(),
             REFILL_PERIOD.toSeconds(),
             TimeUnit.SECONDS

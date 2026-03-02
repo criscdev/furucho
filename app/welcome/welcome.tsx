@@ -31,7 +31,7 @@ export function Welcome({
   };
 
   return (
-    <main id="main" className="px-4 py-8 md:py-16">
+    <div className="px-4 py-8 md:py-16">
       {/* Hero Section */}
       <section 
         className="max-w-4xl mx-auto text-center"
@@ -144,6 +144,6 @@ export function Welcome({
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

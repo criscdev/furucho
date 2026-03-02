@@ -82,6 +82,14 @@ describe('Home route', () => {
       expect(screen.getByRole('heading', { name: /faça sua encomenda/i })).toBeInTheDocument();
     });
 
+    it('wraps content in main landmark with skip-link target', () => {
+      render(<Home />);
+
+      const main = screen.getByRole('main');
+      expect(main).toHaveAttribute('id', 'main');
+      expect(main).toHaveAttribute('tabIndex', '-1');
+    });
+
     it('has no accessibility violations', async () => {
       const { container } = render(<Home />);
       const results = await axe(container);

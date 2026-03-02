@@ -108,9 +108,9 @@ public class OrderService {
     }
 
     /**
-     * Normalizes CEP by removing hyphen.
+     * Normalizes CEP by removing all non-digit characters.
      */
     private String normalizeCep(String cep) {
-        return cep.replace("-", "");
+        return cep.replaceAll("\\D", "");
     }
 }

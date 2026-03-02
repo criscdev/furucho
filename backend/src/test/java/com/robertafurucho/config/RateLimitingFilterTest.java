@@ -6,6 +6,7 @@ import com.robertafurucho.order.OrderController;
 import com.robertafurucho.order.OrderResponse;
 import com.robertafurucho.order.OrderService;
 import com.robertafurucho.order.OrderStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,14 +52,20 @@ class RateLimitingFilterTest {
     private OrderService orderService;
 
     private MockMvc mockMvc;
+    private RateLimitingFilter filter;
 
     @BeforeEach
     void setUp() {
-        var filter = new RateLimitingFilter(new ObjectMapper());
+        filter = new RateLimitingFilter(new ObjectMapper());
         mockMvc = MockMvcBuilders
             .standaloneSetup(new OrderController(orderService))
             .addFilters(filter)
             .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        filter.destroy();
     }
 
     /** Stub service to return a minimal valid OrderResponse. */

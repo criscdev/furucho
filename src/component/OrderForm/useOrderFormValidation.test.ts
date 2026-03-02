@@ -70,7 +70,7 @@ describe('useOrderFormValidation', () => {
     expect(errors.phone).toBe('Telefone é obrigatório');
     expect(errors.address).toBe('Endereço é obrigatório');
     expect(errors.postalCode).toBe('CEP é obrigatório');
-    expect(errors.orderScope).toBe('Resumo do pedido é obrigatório');
+    expect(errors.orderScope).toBe('Tipo de boneca é obrigatório');
     expect(errors.orderScopeDetail).toBe('Detalhes do pedido são obrigatórios');
     expect(errors.receiveDate).toBe('Data de entrega é obrigatória');
   });
@@ -243,6 +243,36 @@ describe('useOrderFormValidation', () => {
     act(() => { errors = result.current.validate(); });
 
     expect(errors.receiveDate).toBe('Data inválida (formato: DD/MM/AAAA)');
+  });
+
+  it('rejects impossible date values like 99/99/9999', () => {
+    const { result } = renderHook(() => useOrderFormValidation());
+
+    act(() => {
+      result.current.handleChange({
+        target: { name: 'receiveDate', value: '99/99/9999' },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    let errors!: ReturnType<typeof result.current.validate>;
+    act(() => { errors = result.current.validate(); });
+
+    expect(errors.receiveDate).toBe('Data inválida');
+  });
+
+  it('rejects 31/02/2026 (Feb 31 does not exist)', () => {
+    const { result } = renderHook(() => useOrderFormValidation());
+
+    act(() => {
+      result.current.handleChange({
+        target: { name: 'receiveDate', value: '31/02/2026' },
+      } as React.ChangeEvent<HTMLInputElement>);
+    });
+
+    let errors!: ReturnType<typeof result.current.validate>;
+    act(() => { errors = result.current.validate(); });
+
+    expect(errors.receiveDate).toBe('Data inválida');
   });
 
   it('accepts valid DD/MM/AAAA date', () => {

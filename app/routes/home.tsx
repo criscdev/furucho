@@ -29,9 +29,11 @@ export default function Home() {
   return (
     <>
       <Header />
-      <Welcome />
-      <Gallery />
-      <OrderForm />
+      <main id="main" tabIndex={-1}>
+        <Welcome />
+        <Gallery />
+        <OrderForm />
+      </main>
     </>
   );
 }

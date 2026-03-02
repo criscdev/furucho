@@ -19,7 +19,7 @@ describe('Order Flow Integration', () => {
   let mockOpen: MockInstance;
 
   beforeEach(() => {
-    mockOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
+    mockOpen = vi.spyOn(window, 'open').mockReturnValue({} as Window);
   });
 
   afterEach(() => {

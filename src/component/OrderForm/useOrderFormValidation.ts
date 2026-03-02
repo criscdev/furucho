@@ -77,7 +77,7 @@ export function useOrderFormValidation() {
     }
 
     if (!formData.orderScope.trim()) {
-      newErrors.orderScope = 'Resumo do pedido é obrigatório';
+      newErrors.orderScope = 'Tipo de boneca é obrigatório';
     }
 
     if (!formData.orderScopeDetail.trim()) {
@@ -88,6 +88,16 @@ export function useOrderFormValidation() {
       newErrors.receiveDate = 'Data de entrega é obrigatória';
     } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.receiveDate)) {
       newErrors.receiveDate = 'Data inválida (formato: DD/MM/AAAA)';
+    } else {
+      const [dd, mm, yyyy] = formData.receiveDate.split('/').map(Number);
+      const date = new Date(yyyy, mm - 1, dd);
+      if (
+        date.getFullYear() !== yyyy ||
+        date.getMonth() !== mm - 1 ||
+        date.getDate() !== dd
+      ) {
+        newErrors.receiveDate = 'Data inválida';
+      }
     }
 
     setErrors(newErrors);
