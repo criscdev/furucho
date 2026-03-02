@@ -249,3 +249,20 @@
 - `addFilters = false` para desabilitar `RateLimitingFilter` em testes de integração (testado à parte)
 
 **Resultado:** `./mvnw test` ✅ (49/49) | zero regressões | 0 Problems
+
+### Batch 3A — 2026-03-02
+
+**TDD Cycle:** GREEN (testes escritos cobrindo componente existente)
+
+**Alterações:**
+
+- `app/welcome/welcome.test.tsx` (novo) — 17 testes com Vitest + RTL + jest-axe:
+  - **Hero Section**: h1 "Roberta Furucho", subtitle "Bonecas Artesanais", parágrafo descritivo
+  - **CTA Button**: renderiza "Fazer Encomenda" com `type="button"`, scrollIntoView + focus no `#order-form`, não lança quando elemento ausente
+  - **Instagram Link**: URL padrão, `target="_blank"` + `rel="noopener noreferrer"`, URL customizada via prop, aria-label descritivo
+  - **About Section**: heading h2 "Sobre as Bonecas", 3 cards h3 (Feito à Mão, Personalizado, Materiais de Qualidade), parágrafos descritivos
+  - **Semantic Structure**: `<main id="main">`, hero `aria-labelledby="hero-heading"`, about `aria-labelledby="about-heading"`
+  - **Accessibility**: axe audit sem violações
+- JSDoc já existente em `welcome.tsx` — nenhuma alteração necessária
+
+**Resultado:** `npx vitest run` ✅ (58/58) | `tsc --noEmit` ✅ | `./mvnw test` ✅ (49/49) | 0 Problems | dev server + browser ✅
