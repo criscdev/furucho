@@ -19,7 +19,7 @@
 - [x] **Batch 2A** — OrderService: createOrder + normalizações
 - [x] **Batch 2B** — OrderService: queries e update
 - [x] **Batch 2C** — OrderController: endpoints faltantes
-- [ ] **Batch 2D** — Rate limiting: testes + extração
+- [x] **Batch 2D** — Rate limiting: testes + extração
 - [ ] **Batch 2E** — Integração backend + Repository
 - [ ] **Batch 3A** — Welcome component: testes
 - [ ] **Batch 3B** — Decompor OrderForm: hook de validação
@@ -209,16 +209,22 @@
 
 **Resultado:** `./mvnw test` ✅ (33/33) | zero regressões
 
-### Batch 2D — 2026-02-28
+### Batch 2D — 2026-02-28 (hardened 2026-03-02)
 
-**TDD Cycle:** REFACTOR (extract rate limiting out of `OrderController`)
+**TDD Cycle:** REFACTOR (extract rate limiting out of `OrderController` + harden)
 
-**Alterações:**
+**Alterações (extração):**
 
-- `RateLimitingFilter.java` (novo) — classe avulsa (sem `@Component`); rate limit de 5 req/min por IP; `ConcurrentHashMap` para buckets por IP; `extractClientIp()` respeita `X-Forwarded-For`; `resetBuckets()` package-private para testes
-- `WebConfig.java` — adicionado bean `FilterRegistrationBean<RateLimitingFilter>` registrado para `/api/orders` e `/api/orders/` com `order=1`; mantém `@WebMvcTest` isolado (filtro não carregado automaticamente)
-- `OrderController.java` — removidos todos os imports e lógica de bucket4j; `createOrder()` simplificado a `@RequestBody` apenas, retorna `ResponseEntity<OrderResponse>` (sem wildcard)
-- `RateLimitingFilterTest.java` (novo) — 5 testes: `firstFiveRequests_AreAllowed`, `sixthRequest_ReturnsTooManyRequests`, `getRequests_AreNotRateLimited`, `xForwardedFor_SeparatesBucketsPerIp`, `extractClientIp_UsesFirstForwardedIp`
-- `pom.xml` — `maven-compiler-plugin` pinado em `3.13.0` (workaround para compatibilidade)
+- `RateLimitingFilter.java` (novo) — classe avulsa (sem `@Component`); rate limit de 5 req/min por IP via bucket4j; per-IP bucketing com `ConcurrentHashMap`
+- `WebConfig.java` — adicionado bean `FilterRegistrationBean<RateLimitingFilter>` registrado para `/api/orders` e `/api/orders/` com `order=1`; mantém `@WebMvcTest` isolado
+- `OrderController.java` — removidos todos os imports e lógica de bucket4j; `createOrder()` simplificado a `@RequestBody` apenas, retorna `ResponseEntity<OrderResponse>`
+- `RateLimitingFilterTest.java` (novo) — 4 testes via standaloneSetup MockMvc
 
-**Resultado:** `./mvnw test` ✅ (38/38) | zero regressões
+**Alterações (hardening — code review pass):**
+
+- `RateLimitingFilter.java` — `ObjectMapper` via construtor (JSON seguro, sem string manual); header `Retry-After: 60` em 429 (RFC 6585); `ScheduledExecutorService` daemon para evicção periódica de buckets stale; `destroy()` para shutdown do scheduler; `isRateLimited()` simplificado p/ check de método apenas (URL scoping delegado ao container); `extractClientIp()` → `private`; `resetBuckets()` removido (dead code)
+- `WebConfig.java` — injeta `ObjectMapper` no construtor do filtro
+- `RateLimitingFilterTest.java` — teste direto `extractClientIp` removido (comportamento coberto por `xForwardedFor_SeparatesBucketsPerIp`); assertiva de header `Retry-After` adicionada no teste 429; `@SuppressWarnings("null")` mantido com comentário (quirk Spring MockMvc)
+- `pom.xml` — pin de `maven-compiler-plugin 3.13.0` adicionado e depois removido (era workaround para JRE-only; JDK agora instalado)
+
+**Resultado:** `./mvnw test` ✅ (37/37) | zero regressões | 0 Problems
