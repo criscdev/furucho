@@ -1,5 +1,6 @@
 package com.robertafurucho.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,9 +23,9 @@ public class WebConfig {
      *           side effects. See D2 in TDD_REFACTORING_PLAN.md.
      */
     @Bean
-    public FilterRegistrationBean<RateLimitingFilter> rateLimitingFilter() {
+    public FilterRegistrationBean<RateLimitingFilter> rateLimitingFilter(ObjectMapper objectMapper) {
         FilterRegistrationBean<RateLimitingFilter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(new RateLimitingFilter());
+        bean.setFilter(new RateLimitingFilter(objectMapper));
         bean.addUrlPatterns("/api/orders", "/api/orders/");
         bean.setOrder(1);
         return bean;

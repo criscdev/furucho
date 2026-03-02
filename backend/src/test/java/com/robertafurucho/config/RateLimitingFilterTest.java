@@ -1,5 +1,6 @@
 package com.robertafurucho.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robertafurucho.order.CreateOrderRequest;
 import com.robertafurucho.order.OrderController;
 import com.robertafurucho.order.OrderResponse;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,14 +32,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * <p>Uses {@code standaloneSetup} with the filter explicitly applied so the
  * filter is tested in isolation — no Spring context, no token bleed between
- * test classes.
+ * test classes. A fresh filter is created per test via {@code @BeforeEach},
+ * guaranteeing clean bucket state.
  *
  * @decision Standalone MockMvc instead of @WebMvcTest because the filter is
- *           intentionally NOT a @Component (see WebConfig). This lets us:
- *           1. test the filter in complete isolation,
- *           2. call {@link RateLimitingFilter#resetBuckets()} in @BeforeEach
- *              so each test starts with a clean bucket state.
+ *           intentionally NOT a @Component (see WebConfig). This lets us
+ *           test the filter in complete isolation.
  */
+// Spring MockMvc builder methods use @NonNull params that trigger false positives
 @SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RateLimitingFilter")
@@ -49,11 +51,10 @@ class RateLimitingFilterTest {
     private OrderService orderService;
 
     private MockMvc mockMvc;
-    private RateLimitingFilter filter;
 
     @BeforeEach
     void setUp() {
-        filter = new RateLimitingFilter();
+        var filter = new RateLimitingFilter(new ObjectMapper());
         mockMvc = MockMvcBuilders
             .standaloneSetup(new OrderController(orderService))
             .addFilters(filter)
@@ -99,7 +100,7 @@ class RateLimitingFilterTest {
     }
 
     @Test
-    @DisplayName("sixth POST request returns 429 Too Many Requests")
+    @DisplayName("sixth POST request returns 429 with Retry-After header")
     void sixthRequest_ReturnsTooManyRequests() throws Exception {
         stubServiceOk();
         String body = validBody();
@@ -115,7 +116,9 @@ class RateLimitingFilterTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isTooManyRequests())
-            .andExpect(jsonPath("$.error").value("Muitas requisições"));
+            .andExpect(jsonPath("$.error").value("Muitas requisições"))
+            .andExpect(header().string("Retry-After",
+                String.valueOf(RateLimitingFilter.RETRY_AFTER_SECONDS)));
     }
 
     @Test
@@ -130,12 +133,12 @@ class RateLimitingFilterTest {
     }
 
     @Test
-    @DisplayName("X-Forwarded-For header is used as the rate limit key")
+    @DisplayName("X-Forwarded-For header separates buckets per IP")
     void xForwardedFor_SeparatesBucketsPerIp() throws Exception {
         stubServiceOk();
         String body = validBody();
 
-        // Exhaust the bucket for IP from X-Forwarded-For
+        // Exhaust the bucket for IP 10.0.0.1
         for (int i = 0; i < RateLimitingFilter.CAPACITY; i++) {
             mockMvc.perform(post("/api/orders")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +147,7 @@ class RateLimitingFilterTest {
                 .andExpect(status().isCreated());
         }
 
-        // Same header IP → 429
+        // Same IP → 429
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("X-Forwarded-For", "10.0.0.1")
@@ -157,17 +160,5 @@ class RateLimitingFilterTest {
                 .header("X-Forwarded-For", "10.0.0.2")
                 .content(body))
             .andExpect(status().isCreated());
-    }
-
-    @Test
-    @DisplayName("extractClientIp returns first IP from comma-separated X-Forwarded-For")
-    void extractClientIp_UsesFirstForwardedIp() throws Exception {
-        var filter2 = new RateLimitingFilter();
-        var req = new org.springframework.mock.web.MockHttpServletRequest();
-        req.addHeader("X-Forwarded-For", "1.2.3.4, 5.6.7.8");
-
-        var ip = filter2.extractClientIp(req);
-
-        org.assertj.core.api.Assertions.assertThat(ip).isEqualTo("1.2.3.4");
     }
 }

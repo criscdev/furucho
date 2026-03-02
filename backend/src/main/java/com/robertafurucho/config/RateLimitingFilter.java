@@ -1,5 +1,6 @@
 package com.robertafurucho.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.Filter;
@@ -16,13 +17,26 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Servlet filter that enforces per-IP rate limiting on POST /api/orders.
+ * Servlet filter that enforces per-IP rate limiting on POST requests.
  *
  * <p>Limit: 5 requests per minute per IP address.
- * Requests that exceed the limit receive HTTP 429 with a JSON error body.
- * All other routes and methods pass through without restriction.
+ * Requests that exceed the limit receive HTTP 429 with a JSON error body
+ * and a {@code Retry-After} header (RFC 6585).
+ * Only POST requests are rate-limited; all other methods pass through.
+ *
+ * <p><strong>URL scoping:</strong> This filter is registered via
+ * {@link WebConfig#rateLimitingFilter()} with URL patterns
+ * {@code /api/orders} and {@code /api/orders/}. The servlet container
+ * restricts which requests reach this filter — the filter itself only
+ * checks the HTTP method.
+ *
+ * <p><strong>Eviction:</strong> Stale IP buckets are purged every
+ * {@link #REFILL_PERIOD} to prevent unbounded memory growth.
  *
  * @decision Extracted from OrderController to satisfy SRP — HTTP concern
  *           (rate limiting) must not live in the business controller.
@@ -35,8 +49,31 @@ public class RateLimitingFilter implements Filter {
 
     static final int CAPACITY = 5;
     static final Duration REFILL_PERIOD = Duration.ofMinutes(1);
+    static final long RETRY_AFTER_SECONDS = REFILL_PERIOD.toSeconds();
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    private final ObjectMapper objectMapper;
+    private final ScheduledExecutorService evictionScheduler;
+
+    /**
+     * Creates a filter with the given {@link ObjectMapper} for JSON serialisation.
+     *
+     * @param objectMapper Jackson mapper (Spring-managed for consistent config)
+     */
+    public RateLimitingFilter(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.evictionScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "rate-limit-eviction");
+            t.setDaemon(true);
+            return t;
+        });
+        evictionScheduler.scheduleAtFixedRate(
+            buckets::clear,
+            REFILL_PERIOD.toSeconds(),
+            REFILL_PERIOD.toSeconds(),
+            TimeUnit.SECONDS
+        );
+    }
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
@@ -52,10 +89,11 @@ public class RateLimitingFilter implements Filter {
             if (!bucket.tryConsume(1)) {
                 httpResp.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 httpResp.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                httpResp.getWriter().write(
-                    "{\"error\":\"Muitas requisições\"," +
-                    "\"message\":\"Por favor, aguarde antes de enviar outro pedido.\"}"
-                );
+                httpResp.setHeader("Retry-After", String.valueOf(RETRY_AFTER_SECONDS));
+                objectMapper.writeValue(httpResp.getWriter(), Map.of(
+                    "error", "Muitas requisições",
+                    "message", "Por favor, aguarde antes de enviar outro pedido."
+                ));
                 return;
             }
         }
@@ -64,14 +102,17 @@ public class RateLimitingFilter implements Filter {
     }
 
     /**
-     * Returns {@code true} only for {@code POST /api/orders} requests.
+     * Returns {@code true} only for POST requests.
+     *
+     * <p>URL scoping is handled by the servlet container via
+     * {@link WebConfig#rateLimitingFilter()} — this method only
+     * checks the HTTP method to avoid duplicating URL patterns.
      *
      * @param req the incoming HTTP request
      * @return whether this request should be rate-limited
      */
     private boolean isRateLimited(HttpServletRequest req) {
-        return "POST".equalsIgnoreCase(req.getMethod())
-            && req.getRequestURI().matches(".*/api/orders/?$");
+        return "POST".equalsIgnoreCase(req.getMethod());
     }
 
     /**
@@ -80,7 +121,7 @@ public class RateLimitingFilter implements Filter {
      * @param request the incoming HTTP request
      * @return the most-specific client IP address
      */
-    String extractClientIp(HttpServletRequest request) {
+    private String extractClientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
             return forwarded.split(",")[0].trim();
@@ -102,13 +143,8 @@ public class RateLimitingFilter implements Filter {
             .build();
     }
 
-    /**
-     * Clears all IP buckets. Package-private for test isolation.
-     *
-     * @decision Exposed to allow {@code @BeforeEach} resets in tests without
-     *           contaminating tests that share a Spring context.
-     */
-    void resetBuckets() {
-        buckets.clear();
+    @Override
+    public void destroy() {
+        evictionScheduler.shutdownNow();
     }
 }
