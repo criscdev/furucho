@@ -127,4 +127,31 @@ describe('OrderForm', () => {
       expect(screen.getByLabelText(/nome completo/i)).toHaveFocus();
     });
   });
+
+  it('shows error alert when window.open throws', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, 'open').mockImplementation(() => {
+      throw new Error('Popup blocked');
+    });
+
+    render(<OrderForm />);
+
+    const orderData = orderFactory();
+
+    await user.type(screen.getByLabelText(/nome completo/i), orderData.name);
+    await user.type(screen.getByLabelText(/^email/i), orderData.email);
+    await user.type(screen.getByLabelText(/telefone/i), orderData.phone);
+    await user.type(screen.getByLabelText(/endereço completo/i), orderData.address);
+    await user.type(screen.getByLabelText(/cep/i), orderData.postalCode);
+    await user.type(screen.getByLabelText(/tipo de boneca desejada/i), orderData.orderScope);
+    await user.type(screen.getByLabelText(/detalhes da boneca/i), orderData.orderScopeDetail);
+    await user.type(screen.getByLabelText(/data desejada para receber/i), orderData.receiveDate);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    const errorAlert = await screen.findByRole('alert');
+    expect(errorAlert).toHaveTextContent(/erro ao processar/i);
+
+    vi.restoreAllMocks();
+  });
 });
