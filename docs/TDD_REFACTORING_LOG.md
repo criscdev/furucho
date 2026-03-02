@@ -20,7 +20,7 @@
 - [x] **Batch 2B** — OrderService: queries e update
 - [x] **Batch 2C** — OrderController: endpoints faltantes
 - [x] **Batch 2D** — Rate limiting: testes + extração
-- [ ] **Batch 2E** — Integração backend + Repository
+- [x] **Batch 2E** — Integração backend + Repository
 - [ ] **Batch 3A** — Welcome component: testes
 - [ ] **Batch 3B** — Decompor OrderForm: hook de validação
 - [ ] **Batch 3C** — Decompor OrderForm: utility WhatsApp
@@ -228,3 +228,24 @@
 - `pom.xml` — pin de `maven-compiler-plugin 3.13.0` adicionado e depois removido (era workaround para JRE-only; JDK agora instalado)
 
 **Resultado:** `./mvnw test` ✅ (37/37) | zero regressões | 0 Problems
+
+### Batch 2E — 2026-03-02
+
+**TDD Cycle:** GREEN (testes escritos cobrindo código já existente)
+
+**Alterações:**
+
+- `OrderRepositoryTest.java` (novo) — 6 testes com `@DataJpaTest` + H2:
+  - `findByEmailOrderByCreatedAtDesc`: retorna pedidos do email, vazio quando não encontra
+  - `findByStatusOrderByCreatedAtDesc`: filtra por status, vazio quando não encontra
+  - `findAllByOrderByCreatedAtDesc`: retorna todos, vazio quando sem dados
+- `OrderIntegrationTest.java` (novo) — 6 testes com `@SpringBootTest` + `@AutoConfigureMockMvc(addFilters = false)` + H2:
+  - `fullLifecycle_CreateGetPatchGet`: POST → GET → PATCH → GET completo, verifica todos os campos
+  - `getAllOrders_ReturnsListNewestFirst`: 2 pedidos, verifica ordem
+  - `getById_NotFound`: ID inexistente → 404
+  - `createOrder_InvalidBody_Returns400`: validação retorna 400 + fieldErrors
+  - `updateStatus_InvalidStatus_Returns400`: enum inválido → 400
+  - `dataPersists_AcrossRequests`: verify count via repository
+- `addFilters = false` para desabilitar `RateLimitingFilter` em testes de integração (testado à parte)
+
+**Resultado:** `./mvnw test` ✅ (49/49) | zero regressões | 0 Problems
