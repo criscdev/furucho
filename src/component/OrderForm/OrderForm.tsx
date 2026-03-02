@@ -15,7 +15,8 @@
  * <OrderForm whatsappNumber="5511999999999" />
  */
 
-import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { useOrderFormValidation } from "./useOrderFormValidation";
 
 export interface OrderFormData {
   name: string;
@@ -35,93 +36,12 @@ export interface OrderFormProps {
   onSubmitSuccess?: (data: OrderFormData) => void;
 }
 
-interface FormErrors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  postalCode?: string;
-  orderScope?: string;
-  orderScopeDetail?: string;
-  receiveDate?: string;
-}
-
-const initialFormData: OrderFormData = {
-  name: "",
-  email: "",
-  phone: "",
-  address: "",
-  postalCode: "",
-  orderScope: "",
-  orderScopeDetail: "",
-  receiveDate: "",
-};
-
 export function OrderForm({ 
   whatsappNumber = "5511999999999",
   onSubmitSuccess 
 }: OrderFormProps) {
-  const [formData, setFormData] = useState<OrderFormData>(initialFormData);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const { formData, errors, handleChange, validate } = useOrderFormValidation();
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const validateForm = (): FormErrors => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Nome é obrigatório";
-    } else if (formData.name.length > 200) {
-      newErrors.name = "Nome deve ter no máximo 200 caracteres";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email é obrigatório";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email inválido";
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Telefone é obrigatório";
-    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ""))) {
-      newErrors.phone = "Telefone deve ter 10 ou 11 dígitos";
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = "Endereço é obrigatório";
-    }
-
-    if (!formData.postalCode.trim()) {
-      newErrors.postalCode = "CEP é obrigatório";
-    } else if (!/^\d{5}-?\d{3}$/.test(formData.postalCode)) {
-      newErrors.postalCode = "CEP inválido (formato: 00000-000)";
-    }
-
-    if (!formData.orderScope.trim()) {
-      newErrors.orderScope = "Resumo do pedido é obrigatório";
-    }
-
-    if (!formData.orderScopeDetail.trim()) {
-      newErrors.orderScopeDetail = "Detalhes do pedido são obrigatórios";
-    }
-
-    if (!formData.receiveDate.trim()) {
-      newErrors.receiveDate = "Data de entrega é obrigatória";
-    } else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(formData.receiveDate)) {
-      newErrors.receiveDate = "Data inválida (formato: DD/MM/AAAA)";
-    }
-
-    setErrors(newErrors);
-    return newErrors;
-  };
 
   const formatWhatsAppMessage = (): string => {
     return encodeURIComponent(
@@ -141,7 +61,7 @@ export function OrderForm({
     e.preventDefault();
     setSubmitStatus("idle");
 
-    const formErrors = validateForm();
+    const formErrors = validate();
     const errorKeys = Object.keys(formErrors);
     if (errorKeys.length > 0) {
       document.getElementById(errorKeys[0])?.focus();
