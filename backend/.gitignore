@@ -2,6 +2,4 @@
 .mvnw.cmd
 mvnw
 mvnw.bat
-
-# Maven build artifacts
 target/
