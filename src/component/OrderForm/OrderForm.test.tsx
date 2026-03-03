@@ -110,6 +110,23 @@ describe('OrderForm', () => {
     });
   });
 
+  it('focuses the first error field when validation fails', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    // Submit the form with empty fields
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    // Wait for validation errors to appear
+    await waitFor(() => {
+      expect(screen.getByText(/nome é obrigatório/i)).toBeInTheDocument();
+    });
+
+    // The first error field (name) should be focused
+    const nameInput = screen.getByLabelText(/nome completo/i);
+    expect(nameInput).toHaveFocus();
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = render(<OrderForm />);
     const results = await axe(container);
