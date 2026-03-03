@@ -3,6 +3,8 @@ package com.robertafurucho.order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,7 +21,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Unit tests for OrderController.
  */
-@WebMvcTest(OrderController.class)
+@WebMvcTest(
+    controllers = OrderController.class,
+    excludeAutoConfiguration = {
+        org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration.class
+    },
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = {
+            com.robertafurucho.security.JwtAuthenticationFilter.class,
+            com.robertafurucho.security.SecurityConfig.class,
+            com.robertafurucho.security.JwtUtil.class,
+            com.robertafurucho.security.AdminUserDetailsService.class
+        }
+    )
+)
 @SuppressWarnings("null")
 class OrderControllerTest {
 
@@ -41,7 +59,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos, olhos verdes",
-            LocalDate.of(2025, 3, 15),
+            LocalDate.now().plusMonths(2),
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
@@ -59,9 +77,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(LocalDate.now().plusMonths(2))))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.name").value("Maria da Silva"))
@@ -81,9 +99,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(LocalDate.now().plusMonths(2))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.fieldErrors.email").exists());
     }
@@ -100,9 +118,9 @@ class OrderControllerTest {
                         "postalCode": "01234-567",
                         "orderScope": "Boneca de pano",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
-                        "receiveDate": "2025-03-15"
+                        "receiveDate": "%s"
                     }
-                    """))
+                    """.formatted(LocalDate.now().plusMonths(2))))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.fieldErrors.name").exists());
     }
@@ -119,7 +137,7 @@ class OrderControllerTest {
             "01234567",
             "Boneca de pano",
             "Cabelos castanhos",
-            LocalDate.of(2025, 3, 15),
+            LocalDate.now().plusMonths(2),
             LocalDateTime.now(),
             OrderStatus.PENDING
         );
