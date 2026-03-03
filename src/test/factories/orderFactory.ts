@@ -11,6 +11,11 @@ import type { OrderFormData } from '../../component/OrderForm/OrderForm';
  * const order = orderFactory({ name: 'Maria Silva' });
  */
 export function orderFactory(overrides: Partial<OrderFormData> = {}): OrderFormData {
+  // Get a date 30 days in the future to ensure it passes validation
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 30);
+  const isoDate = futureDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  
   return {
     name: 'Maria da Silva',
     email: 'maria@exemplo.com',
