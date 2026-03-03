@@ -16,10 +16,10 @@ import { Gallery } from "../../src/component/Gallery/Gallery";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Roberta Furucho | Bonecas Artesanais" },
-    { name: "description", content: "Bonecas artesanais feitas à mão com amor e dedicação. Encomende sua boneca personalizada única." },
-    { property: "og:title", content: "Roberta Furucho | Bonecas Artesanais" },
-    { property: "og:description", content: "Bonecas artesanais feitas à mão com amor e dedicação." },
+    { title: "Roberta Furucho | Bonecas de Biscuit Artesanais" },
+    { name: "description", content: "Bonecas artesanais de biscuit modeladas à mão com amor e dedicação. Encomende sua boneca personalizada única em porcelana fria." },
+    { property: "og:title", content: "Roberta Furucho | Bonecas de Biscuit Artesanais" },
+    { property: "og:description", content: "Bonecas artesanais de biscuit modeladas à mão com amor e dedicação." },
     { property: "og:type", content: "website" },
     { name: "theme-color", content: "#F4B8C5" },
   ];

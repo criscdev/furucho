@@ -48,7 +48,7 @@ class OrderControllerTest {
             "11999998888",
             "Rua das Flores, 123",
             "01234567",
-            "Boneca de pano",
+            "Boneca de biscuit",
             "Cabelos castanhos, olhos verdes",
             FUTURE_DATE,
             LocalDateTime.now(),
@@ -66,7 +66,7 @@ class OrderControllerTest {
                         "phone": "11999998888",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
                         "receiveDate": "%s"
                     }
@@ -88,7 +88,7 @@ class OrderControllerTest {
                         "phone": "11999998888",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
                         "receiveDate": "%s"
                     }
@@ -107,7 +107,7 @@ class OrderControllerTest {
                         "phone": "11999998888",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Cabelos castanhos, olhos verdes",
                         "receiveDate": "%s"
                     }
@@ -126,7 +126,7 @@ class OrderControllerTest {
             "11999998888",
             "Rua das Flores, 123",
             "01234567",
-            "Boneca de pano",
+            "Boneca de biscuit",
             "Cabelos castanhos",
             FUTURE_DATE,
             LocalDateTime.now(),
@@ -225,7 +225,7 @@ class OrderControllerTest {
                         "phone": "11999998888",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Descrição válida",
                         "receiveDate": "2020-01-01"
                     }
@@ -245,7 +245,7 @@ class OrderControllerTest {
                         "phone": "119",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Descrição válida",
                         "receiveDate": "%s"
                     }
@@ -266,7 +266,7 @@ class OrderControllerTest {
                         "phone": "11999998888",
                         "address": "Rua das Flores, 123",
                         "postalCode": "01234-567",
-                        "orderScope": "Boneca de pano",
+                        "orderScope": "Boneca de biscuit",
                         "orderScopeDetail": "Descrição válida",
                         "receiveDate": "%s"
                     }

@@ -254,7 +254,7 @@ export function OrderForm({
                 aria-required="true"
                 aria-invalid={!!errors.orderScope}
                 aria-describedby={errors.orderScope ? "orderScope-error" : undefined}
-                placeholder="Ex: Boneca de pano tradicional, Amigurumi..."
+                placeholder="Ex: Boneca bailarina, Noivinha, Personagem..."
                 maxLength={100}
               />
               {errors.orderScope && (

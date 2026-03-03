@@ -26,7 +26,7 @@ describe('Home route', () => {
       ) as { name: string; content: string } | undefined;
 
       expect(descTag).toBeDefined();
-      expect(descTag!.content).toMatch(/bonecas artesanais/i);
+      expect(descTag!.content).toMatch(/bonecas artesanais de biscuit/i);
     });
 
     it('returns Open Graph tags', () => {

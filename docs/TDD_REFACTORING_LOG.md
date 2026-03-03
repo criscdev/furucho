@@ -358,3 +358,69 @@
 - `e2e/smoke.spec.ts` — 2 testes (já existente)
 
 **Resultado:** `npx vitest run` ✅ (91/91) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
+### Revisão Sênior — 18 issues (commit `45a0a02`) — 2026-03-02
+
+**Escopo:** Revisão completa do código (lupa de dev sênior) — 58 issues identificados, 18 corrigidos imediatamente (5 CRITICAL + 8 MAJOR + 5 MINOR), restante documentado no backlog.
+
+**Correções CRITICAL + MAJOR — Frontend:**
+
+- **F1+F3**: `<main>` movido de Welcome para Home com `tabIndex={-1}` para skip link funcional
+- **F2+F10**: Detecção de popup bloqueado (`window.open` retorna `null`) + `reset()` após sucesso
+- **F4**: Mensagem de validação "Resumo do pedido" → "Tipo de boneca é obrigatório" (clareza UX)
+- **F7**: Validação de data agora verifica dia/mês real (rejeita 99/99/9999, 31/02/2026)
+- **F9**: Mensagens do ErrorBoundary traduzidas para pt-BR
+- **F14**: `aria-describedby` condicional no campo receiveDate (só quando há erro)
+
+**Correções MAJOR — Backend:**
+
+- **B4+B5**: `instanceof FieldError` pattern matching + `log.error` no catch-all do GlobalExceptionHandler
+- **B7+B13**: Smart eviction no rate limiter (só remove buckets cheios) + `@AfterEach filter.destroy()`
+- **B14**: `normalizeCep` alinhado a `replaceAll("\\D", "")`
+
+**Correções Test Quality:**
+
+- **F12+F13+F23**: `afterEach(vi.restoreAllMocks)` padrão + `fireEvent` → `userEvent`
+- **F17+F18**: E2E `waitForTimeout(500)` → asserção explícita; skip link verifica foco
+- Integration test: mock `window.open` retorna `{} as Window` (não `null`)
+
+**Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
+
+### Escopo Biscuit — Correção de conteúdo — 2026-03-02
+
+**Contexto:** Todo o site é exclusivamente para bonecas de biscuit (porcelana fria). Referências a bonecas de pano, amigurumi, crochê, feltro, tecidos, linhas e enchimentos foram removidas/substituídas.
+
+**Alterações — Frontend:**
+
+- `welcome.tsx` — Hero: "modelada à mão em biscuit" + "porcelana fria"; About card 1: "Modelado à Mão" + emoji 🎨 (🧵 removido) + "esculpido em biscuit"; About card 3: "Massa de biscuit e tintas atóxicas"
+- `welcome.test.tsx` — Asserções atualizadas para novo texto biscuit
+- `home.tsx` — Meta tags: "Bonecas de Biscuit Artesanais", "de biscuit", "em porcelana fria"
+- `home.test.tsx` — Asserção `/bonecas artesanais de biscuit/i`
+- `Gallery.tsx` — 3 itens default: "Boneca de biscuit clássica", "Boneca de biscuit bailarina", "Boneca de biscuit com roupa verde"
+- `Gallery.test.tsx` — Mock items alinhados ao novo conteúdo
+- `OrderForm.tsx` — Placeholder: "Ex: Boneca bailarina, Noivinha, Personagem..."
+- `orderFactory.ts` — "Boneca de biscuit personalizada", "20cm em biscuit"
+
+**Alterações — Backend (dados de teste):**
+
+- `RateLimitingFilterTest.java` — "Boneca de pano" → "Boneca de biscuit"
+- `OrderServiceTest.java` — "Boneca de pano" → "Boneca de biscuit" + descrição "em biscuit"
+- `OrderControllerTest.java` — 8 ocorrências "Boneca de pano" → "Boneca de biscuit"
+- `OrderIntegrationTest.java` — "Boneca de pano artesanal"→"Boneca de biscuit artesanal" + "40cm"→"20cm"; "Boneca de feltro"→"Boneca de biscuit noivinha"; "Boneca de crochê"/"amigurumi"→"Boneca de biscuit bailarina/rosa"
+
+**Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
+
+### Revisão Sênior 2 — Lupa final — 2026-03-02
+
+**Escopo:** Revisão completa (dev sênior) de todo o trabalho feito — biscuit scope, senior fixes, hooks, utils, E2E, integração, backend.
+
+**Issues encontrados e corrigidos:**
+
+- **MAJOR** — Gallery items 4–6 (`defaultItems`) ainda tinham alt text genérico sem "biscuit" → Adicionado "de biscuit" nos 3 itens restantes para consistência com escopo exclusivo
+- **MINOR** — JSDoc de `welcome.tsx` ainda dizia "Uses semantic `<main>` landmark" mas `<main>` foi movido para Home → Corrigido para "main landmark is in Home route"
+
+**Issues documentados (pre-existentes, fora do escopo):**
+
+- Backend `@Pattern("\\d{10,11}")` no phone DTO vs `normalizePhone()` no service — inconsistência de design (normalization é dead code para non-digit input via API validada)
+- Frontend não valida se data é no futuro (backend tem `@Future`) — gap de UX aceitável pois form vai para WhatsApp, não para backend
+
+**Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões

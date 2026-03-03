@@ -51,8 +51,8 @@ class OrderServiceTest {
             "11987654321",
             "Rua das Bonecas, 42",
             "01234-567",
-            "Boneca de pano",
-            "Boneca com vestido azul e cabelo cacheado",
+            "Boneca de biscuit",
+            "Boneca de biscuit com vestido azul e cabelo cacheado",
             FUTURE_DATE
         );
     }

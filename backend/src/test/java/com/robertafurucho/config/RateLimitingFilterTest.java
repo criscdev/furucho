@@ -86,7 +86,7 @@ class RateLimitingFilterTest {
                 "phone": "11999990000",
                 "address": "Rua X, 1",
                 "postalCode": "01234-567",
-                "orderScope": "Boneca de pano",
+                "orderScope": "Boneca de biscuit",
                 "orderScopeDetail": "Descricao valida",
                 "receiveDate": "%s"
             }

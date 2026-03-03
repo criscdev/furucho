@@ -119,7 +119,7 @@ describe('Welcome', () => {
   it('renders three about cards with correct headings', () => {
     render(<Welcome />);
 
-    expect(screen.getByRole('heading', { name: /feito à mão/i, level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /modelado à mão/i, level: 3 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /personalizado/i, level: 3 })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /materiais de qualidade/i, level: 3 })).toBeInTheDocument();
   });
@@ -127,9 +127,9 @@ describe('Welcome', () => {
   it('each about card has a description paragraph', () => {
     render(<Welcome />);
 
-    expect(screen.getByText(/técnicas artesanais tradicionais/i)).toBeInTheDocument();
+    expect(screen.getByText(/esculpido em biscuit/i)).toBeInTheDocument();
     expect(screen.getByText(/feitas sob medida/i)).toBeInTheDocument();
-    expect(screen.getByText(/enchimentos antialérgicos/i)).toBeInTheDocument();
+    expect(screen.getByText(/tintas atóxicas/i)).toBeInTheDocument();
   });
 
   // ── Semantic Structure ────────────────────────────────────────

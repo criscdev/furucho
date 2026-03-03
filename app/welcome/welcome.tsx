@@ -5,8 +5,7 @@
  * Instagram link, and call-to-action to the order form.
  *
  * A11y:
- * - Uses semantic <main> landmark
- * - Single <h1> for page title
+ * - Single <h1> for page title (main landmark is in Home route)
  * - Descriptive link text for Instagram
  * - CTA button with clear purpose
  *
@@ -54,8 +53,8 @@ export function Welcome({
           className="text-lg mb-8 max-w-2xl mx-auto"
           style={{ color: 'var(--color-text)' }}
         >
-          Cada boneca é única, feita à mão com amor e dedicação. 
-          Transformando tecidos e linhas em companheiras especiais 
+          Cada boneca é única, modelada à mão em biscuit com amor e dedicação. 
+          Transformando porcelana fria em companheiras especiais 
           para todas as idades.
         </p>
 
@@ -108,11 +107,11 @@ export function Welcome({
                 style={{ backgroundColor: 'var(--color-rose)' }}
                 aria-hidden="true"
               >
-                <span className="text-2xl">🧵</span>
+                <span className="text-2xl">🎨</span>
               </div>
-              <h3 className="font-semibold mb-2">Feito à Mão</h3>
+              <h3 className="font-semibold mb-2">Modelado à Mão</h3>
               <p style={{ color: 'var(--color-text-light)' }}>
-                Cada detalhe é cuidadosamente costurado com técnicas artesanais tradicionais.
+                Cada detalhe é cuidadosamente esculpido em biscuit com técnicas artesanais.
               </p>
             </div>
             <div className="text-center p-4">
@@ -138,7 +137,7 @@ export function Welcome({
               </div>
               <h3 className="font-semibold mb-2">Materiais de Qualidade</h3>
               <p style={{ color: 'var(--color-text-light)' }}>
-                Tecidos selecionados e enchimentos antialérgicos para segurança e durabilidade.
+                Massa de biscuit e tintas atóxicas selecionadas para segurança e durabilidade.
               </p>
             </div>
           </div>

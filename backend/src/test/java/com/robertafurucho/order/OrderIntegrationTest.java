@@ -61,8 +61,8 @@ class OrderIntegrationTest {
                 "phone": "11999990000",
                 "address": "Rua das Bonecas, 42",
                 "postalCode": "01234-567",
-                "orderScope": "Boneca de pano artesanal",
-                "orderScopeDetail": "Boneca com vestido azul e cabelo castanho, 40cm",
+                "orderScope": "Boneca de biscuit artesanal",
+                "orderScopeDetail": "Boneca de biscuit com vestido azul e cabelo castanho, 20cm",
                 "receiveDate": "%s"
             }
             """.formatted(FUTURE_DATE.toString());
@@ -123,8 +123,8 @@ class OrderIntegrationTest {
                 "phone": "21888880000",
                 "address": "Av. Brasil, 100",
                 "postalCode": "20000-000",
-                "orderScope": "Boneca de feltro",
-                "orderScopeDetail": "Boneca pequena com chapéu vermelho",
+                "orderScope": "Boneca de biscuit noivinha",
+                "orderScopeDetail": "Boneca pequena de biscuit com véu branco",
                 "receiveDate": "%s"
             }
             """.formatted(FUTURE_DATE.toString());
@@ -212,8 +212,8 @@ class OrderIntegrationTest {
                 "phone": "31777770000",
                 "address": "Rua Y, 10",
                 "postalCode": "30000-000",
-                "orderScope": "Boneca de crochê",
-                "orderScopeDetail": "Boneca estilo amigurumi rosa",
+                "orderScope": "Boneca de biscuit bailarina",
+                "orderScopeDetail": "Boneca de biscuit bailarina rosa",
                 "receiveDate": "%s"
             }
             """.formatted(FUTURE_DATE.toString());

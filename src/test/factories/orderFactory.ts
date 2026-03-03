@@ -23,8 +23,8 @@ export function orderFactory(overrides: Partial<OrderFormData> = {}): OrderFormD
     phone: '11999998888',
     address: 'Rua das Flores, 123, São Paulo - SP',
     postalCode: '01234-567',
-    orderScope: 'Boneca de pano personalizada',
-    orderScopeDetail: 'Boneca de aproximadamente 40cm com cabelos castanhos, olhos verdes e vestido azul.',
+    orderScope: 'Boneca de biscuit personalizada',
+    orderScopeDetail: 'Boneca de aproximadamente 20cm em biscuit, cabelos castanhos, olhos verdes e vestido azul.',
     receiveDate: futureDate(),
     ...overrides,
   };

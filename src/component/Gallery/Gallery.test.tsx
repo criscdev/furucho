@@ -10,19 +10,19 @@ describe('Gallery', () => {
     {
       id: '1',
       src: 'https://example.com/doll1.jpg',
-      alt: 'Boneca de pano tradicional com vestido rosa',
-      title: 'Boneca Tradicional',
+      alt: 'Boneca de biscuit clássica com vestido rosa',
+      title: 'Boneca Clássica',
     },
     {
       id: '2',
       src: 'https://example.com/doll2.jpg',
-      alt: 'Boneca amigurumi de crochê em tons de lavanda',
-      title: 'Amigurumi Lavanda',
+      alt: 'Boneca de biscuit bailarina em tons de lavanda',
+      title: 'Bailarina Lavanda',
     },
     {
       id: '3',
       src: 'https://example.com/doll3.jpg',
-      alt: 'Boneca personalizada com características únicas',
+      alt: 'Boneca de biscuit personalizada com características únicas',
     },
   ];
 
@@ -48,16 +48,16 @@ describe('Gallery', () => {
   it('renders images with proper alt text for accessibility', () => {
     render(<Gallery items={mockItems} />);
     
-    expect(screen.getByAltText('Boneca de pano tradicional com vestido rosa')).toBeInTheDocument();
-    expect(screen.getByAltText('Boneca amigurumi de crochê em tons de lavanda')).toBeInTheDocument();
-    expect(screen.getByAltText('Boneca personalizada com características únicas')).toBeInTheDocument();
+    expect(screen.getByAltText('Boneca de biscuit clássica com vestido rosa')).toBeInTheDocument();
+    expect(screen.getByAltText('Boneca de biscuit bailarina em tons de lavanda')).toBeInTheDocument();
+    expect(screen.getByAltText('Boneca de biscuit personalizada com características únicas')).toBeInTheDocument();
   });
 
   it('renders item titles when provided', () => {
     render(<Gallery items={mockItems} />);
     
-    expect(screen.getByRole('heading', { name: 'Boneca Tradicional', level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Amigurumi Lavanda', level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Boneca Clássica', level: 3 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Bailarina Lavanda', level: 3 })).toBeInTheDocument();
   });
 
   it('uses lazy loading for images', () => {
