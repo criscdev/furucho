@@ -42,27 +42,33 @@ test.describe('Keyboard & accessibility', () => {
   });
 
   // 4B.2
-  test('axe scan — desktop 1280px', async ({ page }) => {
+  test('axe scan — desktop 1280px (WCAG 2.2 AA)', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto('/');
 
-    const results = await new AxeBuilder({ page }).analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+      .analyze();
     expect(results.violations).toEqual([]);
   });
 
-  test('axe scan — tablet 768px', async ({ page }) => {
+  test('axe scan — tablet 768px (WCAG 2.2 AA)', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/');
 
-    const results = await new AxeBuilder({ page }).analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+      .analyze();
     expect(results.violations).toEqual([]);
   });
 
-  test('axe scan — mobile 375px', async ({ page }) => {
+  test('axe scan — mobile 375px (WCAG 2.2 AA)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
 
-    const results = await new AxeBuilder({ page }).analyze();
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+      .analyze();
     expect(results.violations).toEqual([]);
   });
 
@@ -153,5 +159,61 @@ test.describe('Keyboard & accessibility', () => {
     expect(await page.getByLabel(/telefone/i).getAttribute('autocomplete')).toBe('tel');
     expect(await page.getByLabel(/endereço completo/i).getAttribute('autocomplete')).toBe('street-address');
     expect(await page.getByLabel(/cep/i).getAttribute('autocomplete')).toBe('postal-code');
+  });
+
+  // 4B.6 — WCAG 2.2 SC 2.5.8 Target Size (Minimum) ≥ 24×24 CSS px
+  test('interactive elements meet 24×24 minimum target size (WCAG 2.5.8)', async ({ page }) => {
+    const MIN = 24;
+
+    // Header nav links
+    for (const name of ['Início', 'Encomendas']) {
+      const link = page.getByRole('link', { name });
+      const box = await link.boundingBox();
+      expect(box, `nav link "${name}" has bounding box`).toBeTruthy();
+      expect(box!.height).toBeGreaterThanOrEqual(MIN);
+      expect(box!.width).toBeGreaterThanOrEqual(MIN);
+    }
+
+    // Instagram link in header
+    const igLink = page.getByRole('link', { name: /instagram.*roberta/i });
+    const igBox = await igLink.boundingBox();
+    expect(igBox, 'Instagram header link has bounding box').toBeTruthy();
+    expect(igBox!.height).toBeGreaterThanOrEqual(MIN);
+    expect(igBox!.width).toBeGreaterThanOrEqual(MIN);
+
+    // CTA buttons
+    const ctaBtn = page.getByRole('button', { name: /fazer encomenda/i });
+    const ctaBox = await ctaBtn.boundingBox();
+    expect(ctaBox, 'CTA button has bounding box').toBeTruthy();
+    expect(ctaBox!.height).toBeGreaterThanOrEqual(MIN);
+
+    // Submit button
+    const submitBtn = page.getByRole('button', { name: /enviar pelo whatsapp/i });
+    const submitBox = await submitBtn.boundingBox();
+    expect(submitBox, 'Submit button has bounding box').toBeTruthy();
+    expect(submitBox!.height).toBeGreaterThanOrEqual(MIN);
+  });
+
+  // 4B.7 — WCAG 2.2 SC 2.5.8 Target Size on mobile (375px)
+  test('interactive elements meet target size on mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/');
+    const MIN = 24;
+
+    // Header nav links must still meet minimum on mobile
+    for (const name of ['Início', 'Encomendas']) {
+      const link = page.getByRole('link', { name });
+      const box = await link.boundingBox();
+      expect(box, `mobile nav "${name}" has bounding box`).toBeTruthy();
+      expect(box!.height).toBeGreaterThanOrEqual(MIN);
+      expect(box!.width).toBeGreaterThanOrEqual(MIN);
+    }
+
+    // Instagram icon link in header (text is sr-only on mobile)
+    const igLink = page.getByRole('link', { name: /instagram.*roberta/i });
+    const igBox = await igLink.boundingBox();
+    expect(igBox, 'Mobile Instagram link has bounding box').toBeTruthy();
+    expect(igBox!.height).toBeGreaterThanOrEqual(MIN);
+    expect(igBox!.width).toBeGreaterThanOrEqual(MIN);
   });
 });
