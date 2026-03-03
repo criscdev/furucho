@@ -424,3 +424,47 @@
 - Frontend não valida se data é no futuro (backend tem `@Future`) — gap de UX aceitável pois form vai para WhatsApp, não para backend
 
 **Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
+
+### Revisão Sênior 3 — Auditoria completa — 2026-03-03
+
+**Escopo:** Revisão completa e sistemática de **todos** os arquivos do projeto (lupa de dev sênior). Leitura de cada arquivo de produção, teste, config, E2E e documentação + grep para termos stale.
+
+**Arquivos auditados (46 total):**
+
+*Frontend produção (8):* `welcome.tsx`, `home.tsx`, `Gallery.tsx`, `OrderForm.tsx`, `useOrderFormValidation.ts`, `formatWhatsAppMessage.ts`, `Header.tsx`, `root.tsx`
+
+*Frontend testes (9):* `welcome.test.tsx`, `home.test.tsx`, `Gallery.test.tsx`, `OrderForm.test.tsx`, `useOrderFormValidation.test.ts`, `formatWhatsAppMessage.test.ts`, `Header.test.tsx`, `root.test.tsx`, `orderFlow.test.tsx`
+
+*Frontend infra (5):* `setupTests.ts`, `test-utils.ts`, `handlers.ts`, `server.ts`, `orderFactory.ts`
+
+*Backend produção (12):* `OrderController.java`, `OrderService.java`, `Order.java`, `CreateOrderRequest.java`, `OrderResponse.java`, `OrderRepository.java`, `OrderNotFoundException.java`, `OrderStatus.java`, `RateLimitingFilter.java`, `GlobalExceptionHandler.java`, `WebConfig.java`, `HealthController.java`
+
+*Backend testes (6):* `OrderControllerTest.java`, `OrderServiceTest.java`, `OrderIntegrationTest.java`, `OrderRepositoryTest.java`, `RateLimitingFilterTest.java`, `HealthControllerTest.java`
+
+*E2E (4):* `happy-path.spec.ts`, `a11y.spec.ts`, `secondary.spec.ts`, `smoke.spec.ts`
+
+*Config (10):* `vitest.config.ts`, `playwright.config.ts`, `package.json`, `tsconfig.json`, `vite.config.ts`, `react-router.config.ts`, `app.css`, `routes.ts`, `application.properties`, `application-prod.properties`
+
+**Verificações grep (stale refs):**
+
+- `pano|feltro|crochê|amigurumi|tecido` → 0 ocorrências em código-fonte (apenas em docs descritivos do que foi alterado) ✅
+- `LocalDate.of(20` → 0 ocorrências em código-fonte ✅
+- `lang="en"` → 0 ocorrências em código-fonte ✅
+- `@ts-nocheck` → 0 ocorrências em código-fonte ✅
+- `fireEvent.` em testes → 0 ocorrências (todo usando `userEvent`) ✅
+
+**Issues encontrados: ZERO**
+
+O codebase está 100% consistente:
+- Todo conteúdo referencia exclusivamente biscuit/porcelana fria
+- Todos os testes usam datas dinâmicas (`.plusMonths(6)` / `futureDate()`)
+- Todas as mensagens de UI/validação estão em pt-BR
+- `afterEach(vi.restoreAllMocks)` presente em todos os test files relevantes
+- Skip link → `#main` com `tabIndex={-1}` funcional
+- Focus styles WCAG AA (`#7B508C` = 5.99:1 sobre cream)
+- Reduced motion media query presente em `app.css`
+- RateLimitingFilter com `destroy()`, smart eviction, daemon thread
+- E2E sem `waitForTimeout` (todas as asserções são explícitas)
+- 0 TypeScript `any` / `@ts-nocheck` / `@ts-ignore` no código-fonte
+
+**Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões | **0 alterações necessárias**
