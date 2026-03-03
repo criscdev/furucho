@@ -84,4 +84,35 @@ test.describe('Happy path & validation', () => {
     // Other errors should remain
     await expect(page.getByText(/email é obrigatório/i)).toBeVisible();
   });
+
+  // 4A.4 — field-level format validation
+  test('shows format errors for invalid email, phone, CEP, and date', async ({ page }) => {
+    // Fill required fields with invalid formats
+    await page.getByLabel(/nome completo/i).fill('Maria');
+    await page.getByLabel(/^email/i).fill('not-an-email');
+    await page.getByLabel(/telefone/i).fill('123');
+    await page.getByLabel(/endereço completo/i).fill('Rua Teste, 1');
+    await page.getByLabel(/cep/i).fill('1234');
+    await page.getByLabel(/tipo de boneca desejada/i).fill('Boneca');
+    await page.getByLabel(/detalhes da boneca/i).fill('Detalhes');
+    await page.getByLabel(/data desejada para receber/i).fill('2026-12-25');
+
+    await page.getByRole('button', { name: /enviar pelo whatsapp/i }).click();
+
+    // Format validation errors should appear
+    await expect(page.getByText(/email inválido/i)).toBeVisible();
+    await expect(page.getByText(/telefone deve ter 10 ou 11 dígitos/i)).toBeVisible();
+    await expect(page.getByText(/cep inválido/i)).toBeVisible();
+    await expect(page.getByText(/data inválida/i)).toBeVisible();
+  });
+
+  // 4A.5 — first invalid field receives focus on submit
+  test('focuses first invalid field on submit', async ({ page }) => {
+    // Leave all fields empty and submit
+    await page.getByRole('button', { name: /enviar pelo whatsapp/i }).click();
+
+    // Name is the first required field — it should receive focus
+    const focusedId = await page.evaluate(() => document.activeElement?.id);
+    expect(focusedId).toBe('name');
+  });
 });

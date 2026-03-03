@@ -129,6 +129,7 @@ export function OrderForm({
                 value={formData.name}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="name"
                 aria-required="true"
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "name-error" : undefined}
@@ -153,6 +154,7 @@ export function OrderForm({
                 value={formData.email}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="email"
                 aria-required="true"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "email-error" : undefined}
@@ -177,6 +179,7 @@ export function OrderForm({
                 value={formData.phone}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="tel"
                 aria-required="true"
                 aria-invalid={!!errors.phone}
                 aria-describedby={errors.phone ? "phone-error" : undefined}
@@ -202,6 +205,7 @@ export function OrderForm({
                 value={formData.address}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="street-address"
                 aria-required="true"
                 aria-invalid={!!errors.address}
                 aria-describedby={errors.address ? "address-error" : undefined}
@@ -226,6 +230,7 @@ export function OrderForm({
                 value={formData.postalCode}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="postal-code"
                 aria-required="true"
                 aria-invalid={!!errors.postalCode}
                 aria-describedby={errors.postalCode ? "postalCode-error" : undefined}

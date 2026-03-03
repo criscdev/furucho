@@ -85,4 +85,73 @@ test.describe('Keyboard & accessibility', () => {
     const focusedId = await page.evaluate(() => document.activeElement?.id);
     expect(focusedId).toBe('main');
   });
+
+  // 4B.4 — keyboard-only form completion
+  test('form can be completed and submitted using only keyboard', async ({ page }) => {
+    // Intercept window.open to prevent navigation
+    await page.evaluate(() => {
+      (window as unknown as Record<string, unknown>).__whatsappUrl = '';
+      window.open = (url?: string | URL) => {
+        (window as unknown as Record<string, unknown>).__whatsappUrl = String(url ?? '');
+        return {} as Window;
+      };
+    });
+
+    // Tab to the order form and fill it
+    const nameInput = page.getByLabel(/nome completo/i);
+    await nameInput.focus();
+    await page.keyboard.type('Maria Silva');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('maria@example.com');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('11999887766');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('Rua das Flores, 123');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('01234567');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('Boneca personalizada');
+
+    await page.keyboard.press('Tab');
+    await page.keyboard.type('Cabelo loiro, vestido azul');
+
+    await page.keyboard.press('Tab');
+
+    const futureDate = (() => {
+      const d = new Date();
+      d.setMonth(d.getMonth() + 6);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}/${d.getFullYear()}`;
+    })();
+    await page.keyboard.type(futureDate);
+
+    // Tab to submit button and press Enter
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Enter');
+
+    // Success message should appear
+    await expect(page.getByText(/redirecionando para o whatsapp/i)).toBeVisible();
+
+    // Verify WhatsApp URL was constructed
+    const whatsappUrl = await page.evaluate(
+      () => (window as unknown as Record<string, string>).__whatsappUrl
+    );
+    expect(whatsappUrl).toContain('wa.me');
+    expect(whatsappUrl).toContain('Maria');
+  });
+
+  // 4B.5 — form fields have autocomplete for assistive tech
+  test('personal data fields have autocomplete attributes', async ({ page }) => {
+    expect(await page.getByLabel(/nome completo/i).getAttribute('autocomplete')).toBe('name');
+    expect(await page.getByLabel(/^email/i).getAttribute('autocomplete')).toBe('email');
+    expect(await page.getByLabel(/telefone/i).getAttribute('autocomplete')).toBe('tel');
+    expect(await page.getByLabel(/endereço completo/i).getAttribute('autocomplete')).toBe('street-address');
+    expect(await page.getByLabel(/cep/i).getAttribute('autocomplete')).toBe('postal-code');
+  });
 });

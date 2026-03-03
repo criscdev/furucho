@@ -29,20 +29,23 @@ describe('Home route', () => {
       expect(descTag!.content).toMatch(/bonecas artesanais de biscuit/i);
     });
 
-    it('returns Open Graph tags', () => {
+    it('returns Open Graph tags with correct values', () => {
       const ogTitle = metaTags.find(
         (tag) => 'property' in tag && tag.property === 'og:title'
-      );
+      ) as { property: string; content: string } | undefined;
       const ogDesc = metaTags.find(
         (tag) => 'property' in tag && tag.property === 'og:description'
-      );
+      ) as { property: string; content: string } | undefined;
       const ogType = metaTags.find(
         (tag) => 'property' in tag && tag.property === 'og:type'
-      );
+      ) as { property: string; content: string } | undefined;
 
       expect(ogTitle).toBeDefined();
+      expect(ogTitle!.content).toContain('Roberta Furucho');
       expect(ogDesc).toBeDefined();
+      expect(ogDesc!.content).toMatch(/bonecas artesanais/i);
       expect(ogType).toBeDefined();
+      expect(ogType!.content).toBe('website');
     });
 
     it('returns theme-color meta tag', () => {

@@ -34,6 +34,16 @@ describe('OrderForm', () => {
     expect(screen.getByLabelText(/telefone/i)).toHaveAttribute('aria-required', 'true');
   });
 
+  it('has autocomplete attributes for personal data fields (WCAG 1.3.5)', () => {
+    render(<OrderForm />);
+
+    expect(screen.getByLabelText(/nome completo/i)).toHaveAttribute('autocomplete', 'name');
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute('autocomplete', 'email');
+    expect(screen.getByLabelText(/telefone/i)).toHaveAttribute('autocomplete', 'tel');
+    expect(screen.getByLabelText(/endereço completo/i)).toHaveAttribute('autocomplete', 'street-address');
+    expect(screen.getByLabelText(/cep/i)).toHaveAttribute('autocomplete', 'postal-code');
+  });
+
   it('shows validation errors for empty required fields on submit', async () => {
     const user = userEvent.setup();
     render(<OrderForm />);
