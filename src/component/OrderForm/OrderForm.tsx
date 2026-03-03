@@ -74,7 +74,7 @@ export function OrderForm({
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): FormErrors => {
     const newErrors: FormErrors = {};
 
     if (!formData.name.trim()) {
@@ -115,33 +115,29 @@ export function OrderForm({
 
     if (!formData.receiveDate.trim()) {
       newErrors.receiveDate = "Data de entrega é obrigatória";
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.receiveDate)) {
+      newErrors.receiveDate = "Data inválida (formato: AAAA-MM-DD)";
     } else {
-      // Validate ISO date format (YYYY-MM-DD)
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(formData.receiveDate)) {
-        newErrors.receiveDate = "Data inválida";
-      } else {
-        // Check if date is in the future
-        const selectedDate = new Date(formData.receiveDate);
-        selectedDate.setHours(0, 0, 0, 0); // Normalize time for consistent comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (selectedDate < today) {
-          newErrors.receiveDate = "Data deve ser no futuro";
-        }
+      // Validate that the date is in the future
+      const selectedDate = new Date(formData.receiveDate);
+      selectedDate.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        newErrors.receiveDate = "Data deve ser no futuro";
       }
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return newErrors;
   };
 
   const formatWhatsAppMessage = (): string => {
-    // Format date from ISO (YYYY-MM-DD) to Brazilian format (DD/MM/YYYY)
+    // Format date from ISO (YYYY-MM-DD) to Brazilian format (DD/MM/YYYY) for display
     const formatDate = (isoDate: string): string => {
       const parts = isoDate.split('-');
       if (parts.length !== 3) {
-        return isoDate; // Return as-is if not in expected format
+        return isoDate; // Return as-is if format is unexpected
       }
       const [year, month, day] = parts;
       return `${day}/${month}/${year}`;
@@ -164,9 +160,10 @@ export function OrderForm({
     e.preventDefault();
     setSubmitStatus("idle");
 
-    if (!validateForm()) {
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
       // Focus first error field
-      const firstErrorField = Object.keys(errors)[0];
+      const firstErrorField = Object.keys(validationErrors)[0];
       if (firstErrorField) {
         const element = document.getElementById(firstErrorField);
         element?.focus();
@@ -413,11 +410,8 @@ export function OrderForm({
                 className="form-input"
                 aria-required="true"
                 aria-invalid={!!errors.receiveDate}
-                aria-describedby={errors.receiveDate ? "receiveDate-error" : "receiveDate-hint"}
+                aria-describedby={errors.receiveDate ? "receiveDate-error" : undefined}
               />
-              <span id="receiveDate-hint" className="text-sm" style={{ color: 'var(--color-text-light)' }}>
-                Selecione uma data futura para entrega
-              </span>
               {errors.receiveDate && (
                 <span id="receiveDate-error" className="form-error" role="alert">
                   {errors.receiveDate}
