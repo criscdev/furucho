@@ -14,14 +14,14 @@
 
 O formulário web (`OrderForm.tsx`) coleta 8 campos do cliente, valida localmente, e abre uma URL `wa.me/` com texto pré-formatado. **O backend nunca é chamado.** O fluxo:
 
-```
+```text
 Visitante → preenche form web → clica "Enviar" → abre WhatsApp com texto colado → fim
 ```
 
 **Problemas identificados (issue C6 do REVIEW_AND_IMPROVEMENTS.md):**
 
 | Problema | Impacto |
-|----------|---------|
+| --- | --- |
 | Backend é código morto | `POST /api/orders` nunca recebe chamadas em produção |
 | Sem persistência | Pedidos existem apenas como mensagens de texto no WhatsApp da Roberta |
 | Sem rastreamento | Impossível saber quantos pedidos foram feitos, taxa de conversão, etc. |
@@ -41,7 +41,7 @@ Visitante → preenche form web → clica "Enviar" → abre WhatsApp com texto c
 
 ### Fluxo Proposto
 
-```
+```text
 Cliente envia "Oi" no WhatsApp
   → Backend recebe webhook
   → Inicia conversa guiada (8 perguntas sequenciais)
@@ -53,6 +53,7 @@ Cliente envia "Oi" no WhatsApp
 ```
 
 **Resultado:**
+
 - Backend deixa de ser código morto
 - Pedidos persistidos em banco com status rastreável
 - Cliente faz pedido sem sair do WhatsApp
@@ -63,7 +64,7 @@ Cliente envia "Oi" no WhatsApp
 ## 3. Objetivos & Métricas de Sucesso
 
 | Objetivo | Métrica | Meta |
-|----------|---------|------|
+| --- | --- | --- |
 | Eliminar backend como código morto | Pedidos criados via `POST /api/orders` | > 0/semana |
 | Conversão de conversa em pedido | % de conversas iniciadas que resultam em pedido | ≥ 40% |
 | Tempo médio do fluxo completo | Tempo entre primeira msg e confirmação | ≤ 5 min |
@@ -76,7 +77,7 @@ Cliente envia "Oi" no WhatsApp
 ## 4. Público-Alvo
 
 | Persona | Necessidade |
-|---------|-------------|
+| --- | --- |
 | **Cliente** | Fazer pedido de boneca artesanal sem sair do WhatsApp |
 | **Roberta (dona)** | Receber pedidos estruturados e rastreáveis, não texto solto |
 | **Admin** | Consultar histórico de pedidos, métricas de conversão |
@@ -110,7 +111,7 @@ Cliente envia "Oi" no WhatsApp
 ### 5.3 Pré-requisitos
 
 | Pré-requisito | Responsável | Status |
-|---------------|-------------|--------|
+| --- | --- | --- |
 | WhatsApp Business Account | Roberta | Pendente |
 | Meta Business Portfolio verificado | Roberta | Pendente |
 | Número de telefone dedicado (não pode ser o pessoal) | Roberta | Pendente |
@@ -163,6 +164,7 @@ public class WhatsAppWebhookController {
 ```
 
 **Segurança:**
+
 - HMAC-SHA256 validation obrigatória em todo POST
 - Verify token configurável via env var
 - Rate limiting separado do existente (o `RateLimitingFilter` atual só cobre `/api/orders` — webhook não é afetado)
@@ -200,7 +202,7 @@ CREATE INDEX idx_conversation_step  ON conversation_states(current_step);
 
 **Enum `ConversationStep`:**
 
-```
+```text
 GREETING          → Mensagem de boas-vindas + pergunta do nome
 ASK_NAME          → "Qual seu nome completo?"
 ASK_EMAIL         → "Qual seu email?"
@@ -217,6 +219,7 @@ EXPIRED           → Timeout 30 min sem resposta
 ```
 
 **Regras:**
+
 - Uma conversa ativa por `wa_id` (se existir ativa, retoma de onde parou)
 - Conversa expira após 30 min de inatividade → marca `expired = true`
 - Nova mensagem após expiração inicia conversa nova
@@ -229,7 +232,7 @@ EXPIRED           → Timeout 30 min sem resposta
 Espelha as regras do frontend (`useOrderFormValidation.ts`) **complementadas** pelas constraints do backend (`CreateOrderRequest.java`):
 
 | Campo | Regex/Regra Frontend | Regra Chatbot (idêntica) |
-|-------|---------------------|-------------------------|
+| --- | --- | --- |
 | name | `!trim()` + max 200 | `!isBlank()` + max 200 chars |
 | email | `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` | Mesma regex + max 100 chars (backend `@Email` + `@Size(max=100)`) |
 | phone | `/^\d{10,11}$/` (após strip não-dígitos) | Mesma regex, strip `\D` antes |
@@ -240,6 +243,7 @@ Espelha as regras do frontend (`useOrderFormValidation.ts`) **complementadas** p
 | receiveDate | `/^\d{2}\/\d{2}\/\d{4}$/` + data válida | Mesma regex + parse `LocalDate` + `isFuture()` |
 
 **Comportamento em erro:**
+
 - Mensagem de erro em português (mesmas strings do frontend)
 - Re-pergunta o campo sem avançar
 - Máximo 3 tentativas por campo → sugere "Digite /cancelar para recomeçar"
@@ -280,6 +284,7 @@ public class StepValidator {
 Usa Interactive Messages da WhatsApp Cloud API para campos com opções:
 
 **orderScope (tipo de boneca) — Botões:**
+
 ```json
 {
   "type": "interactive",
@@ -298,6 +303,7 @@ Usa Interactive Messages da WhatsApp Cloud API para campos com opções:
 ```
 
 **Correção — Lista interativa:**
+
 ```json
 {
   "type": "interactive",
@@ -325,6 +331,7 @@ Usa Interactive Messages da WhatsApp Cloud API para campos com opções:
 ```
 
 **Confirmação — Botões:**
+
 ```json
 {
   "type": "interactive",
@@ -350,7 +357,7 @@ Usa Interactive Messages da WhatsApp Cloud API para campos com opções:
 
 Antes de criar o pedido, exibe resumo formatado:
 
-```
+```text
 🧸 *Resumo do seu Pedido*
 
 *Nome:* Maria Silva
@@ -411,7 +418,7 @@ private void handleConfirmation(ConversationState state) {
 
 ### RF-07: Mensagem de Confirmação
 
-```
+```text
 ✅ *Pedido Confirmado!*
 
 Seu pedido nº *#{{ orderId }}* foi registrado com sucesso!
@@ -429,7 +436,7 @@ Obrigada pela confiança! 🧸💕
 **Categoria:** Marketing  
 **Idioma:** pt_BR  
 
-```
+```text
 Olá! 👋 Sou a assistente da Roberta Furucho - Bonecas Artesanais.
 
 Quer encomendar uma boneca exclusiva feita à mão? Eu te ajudo!
@@ -449,7 +456,7 @@ Quer encomendar uma boneca exclusiva feita à mão? Eu te ajudo!
 **Idioma:** pt_BR  
 **Variáveis:** `{{1}}` = nº pedido, `{{2}}` = novo status
 
-```
+```text
 🧸 Atualização do Pedido *#{{1}}*
 
 Novo status: *{{2}}*
@@ -467,7 +474,7 @@ Alguma dúvida? Responda esta mensagem!
 - **30 minutos** sem resposta → conversa marcada como `EXPIRED`
 - Mensagem de despedida (non-template, dentro do CSW):
 
-```
+```text
 Parece que você ficou ocupado(a)! 😊
 Sem problemas — quando quiser retomar, é só mandar uma mensagem.
 Seus dados até agora foram salvos.
@@ -482,7 +489,7 @@ Seus dados até agora foram salvos.
 ### 7.1 Performance
 
 | Requisito | Meta |
-|-----------|------|
+| --- | --- |
 | Tempo de resposta do webhook (aceitar POST) | < 500ms |
 | Tempo de resposta ao cliente (enviar mensagem) | < 3s |
 | Processamento assíncrono | Via `@Async` ou `CompletableFuture` |
@@ -491,7 +498,7 @@ Seus dados até agora foram salvos.
 ### 7.2 Segurança
 
 | Requisito | Implementação |
-|-----------|--------------|
+| --- | --- |
 | Validação de webhook | HMAC-SHA256 com App Secret |
 | Token armazenamento | Env var `WHATSAPP_ACCESS_TOKEN` (nunca em código) |
 | Dados PII | Mesma proteção do Order existente (TODO: issue C4 pendente) |
@@ -501,7 +508,7 @@ Seus dados até agora foram salvos.
 ### 7.3 Resiliência
 
 | Cenário | Comportamento |
-|---------|--------------|
+| --- | --- |
 | WhatsApp API down | Retry com backoff exponencial (3 tentativas) |
 | Webhook timeout | Meta re-envia (built-in retry) |
 | Server restart | Estado persiste em banco, retoma conversa |
@@ -511,7 +518,7 @@ Seus dados até agora foram salvos.
 ### 7.4 Observabilidade
 
 | Aspecto | Implementação |
-|---------|--------------|
+| --- | --- |
 | Logs | SLF4J structured logging por conversa |
 | Métricas | Contadores: conversas iniciadas, completadas, expiradas, erros |
 | Health check | `/api/health` já existente — adicionar status da integração WhatsApp |
@@ -519,7 +526,7 @@ Seus dados até agora foram salvos.
 ### 7.5 Testabilidade
 
 | Camada | Tipo de Teste | Framework |
-|--------|--------------|-----------|
+| --- | --- | --- |
 | `StepValidator` | Unitário | JUnit 5 + AssertJ |
 | `ConversationService` | Unitário + Integração | JUnit 5 + Mockito |
 | `WhatsAppWebhookController` | `@WebMvcTest` | MockMvc |
@@ -532,7 +539,7 @@ Seus dados até agora foram salvos.
 
 ### 8.1 Diagrama de Fluxo
 
-```
+```text
 ┌──────────┐     POST webhook     ┌──────────────────┐
 │ WhatsApp │ ──────────────────── │ WebhookController │
 │ Cloud API│                      │ (valida HMAC)     │
@@ -561,7 +568,7 @@ Seus dados até agora foram salvos.
 
 ### 8.2 Pacote Novo
 
-```
+```text
 backend/src/main/java/com/robertafurucho/
 ├── order/                          # EXISTENTE — não modificar
 │   ├── Order.java
@@ -623,7 +630,7 @@ whatsapp.enabled=true
 A WhatsApp Cloud API usa **precificação por mensagem** (não mais por conversa):
 
 | Tipo de Mensagem | Custo |
-|------------------|-------|
+| --- | --- |
 | **Non-template** (text, image, interactive) dentro do CSW (24h) | **Grátis** |
 | **Utility template** dentro do CSW | **Grátis** |
 | **Utility template** fora do CSW | ~$0.0080 USD (Brasil) |
@@ -634,10 +641,10 @@ A WhatsApp Cloud API usa **precificação por mensagem** (não mais por conversa
 
 ### 9.2 Análise de Custo para Roberta
 
-**Cenário: 50 pedidos/mês**
+#### Cenário: 50 pedidos/mês
 
 | Fluxo | Tipo | Custo |
-|-------|------|-------|
+| --- | --- | --- |
 | Cliente inicia conversa → abre CSW | Grátis | $0 |
 | 8 perguntas + validações + resumo + confirmação (~12 msgs) | Non-template dentro CSW | $0 |
 | Atualização de status (dentro de 24h) | Utility template dentro CSW | $0 |
@@ -645,6 +652,7 @@ A WhatsApp Cloud API usa **precificação por mensagem** (não mais por conversa
 | **Total mensal** | | **~$0.40 USD (~R$2,50)** |
 
 **Se Roberta quiser enviar mensagens proativas (marketing):**
+
 - Template de boas-vindas para 200 contatos/mês = $0.0625 × 200 = $12.50 USD (~R$75)
 
 **BRL billing:** Disponível a partir de 01/07/2026 para empresas brasileiras.
@@ -662,7 +670,7 @@ A WhatsApp Cloud API usa **precificação por mensagem** (não mais por conversa
 
 ### 10.1 Exemplo Completo
 
-```
+```text
 CLIENTE:  Oi
 BOT:      🧸 Olá! Bem-vindo(a) à Roberta Furucho - Bonecas Artesanais!
           Vou te ajudar a fazer sua encomenda. São só algumas perguntas rápidas.
@@ -721,7 +729,7 @@ BOT:      ✅ *Pedido Confirmado!*
 
 ### 10.2 Fluxo de Correção
 
-```
+```text
 CLIENTE:  [clica: ✏ Corrigir]
 BOT:      Qual campo deseja corrigir?
           [Lista interativa com todos os 8 campos + valor atual]
@@ -737,7 +745,7 @@ BOT:      ✓ Email atualizado!
 ### 10.3 Comandos Especiais
 
 | Comando | Efeito |
-|---------|--------|
+| --- | --- |
 | `/cancelar` | Cancela conversa atual, inicia nova |
 | `/status` | Consulta status do último pedido (se existir) |
 | `/ajuda` | Exibe comandos disponíveis |
@@ -749,7 +757,7 @@ BOT:      ✓ Email atualizado!
 
 ### 11.1 Envio de Mensagens
 
-```
+```http
 POST https://graph.facebook.com/v25.0/{phone-number-id}/messages
 Authorization: Bearer {access-token}
 Content-Type: application/json
@@ -822,7 +830,7 @@ Content-Type: application/json
 ### 12.1 Testes Unitários (~25 testes)
 
 | Classe | Testes | Framework |
-|--------|--------|-----------|
+| --- | --- | --- |
 | `StepValidator` | 16 — 2 por campo (válido + inválido) | JUnit 5 + AssertJ |
 | `ConversationService` | 5 — transições de estado, expiração, retomada | JUnit 5 + Mockito |
 | `WhatsAppSignatureValidator` | 2 — assinatura válida + inválida | JUnit 5 |
@@ -831,7 +839,7 @@ Content-Type: application/json
 ### 12.2 Testes de Integração (~8 testes)
 
 | Cenário | Tipo |
-|---------|------|
+| --- | --- |
 | Webhook verification handshake | `@WebMvcTest` + MockMvc |
 | Webhook POST com HMAC válido | `@WebMvcTest` + MockMvc |
 | Webhook POST com HMAC inválido → 401 | `@WebMvcTest` + MockMvc |
@@ -844,7 +852,7 @@ Content-Type: application/json
 ### 12.3 Testes Manuais
 
 | Cenário | Ambiente |
-|---------|----------|
+| --- | --- |
 | Enviar mensagem real via WhatsApp Business teste | Meta Developer sandbox |
 | Receber webhook real | ngrok + localhost |
 | Template message aprovação | WhatsApp Business Manager |
@@ -857,7 +865,7 @@ Content-Type: application/json
 ## 13. Riscos & Mitigações
 
 | # | Risco | Probabilidade | Impacto | Mitigação |
-|---|-------|--------------|---------|-----------|
+| --- | --- | --- | --- | --- |
 | R1 | Meta rejeita templates | Média | Alto | Seguir guidelines de templates, testar na sandbox antes |
 | R2 | Verificação do Meta Business Portfolio demora | Alta | Bloqueante | Iniciar processo ASAP, independente do dev |
 | R3 | 5s timeout do webhook causa re-envios duplicados | Média | Médio | Processamento assíncrono + idempotência por `message_id` |
@@ -872,7 +880,7 @@ Content-Type: application/json
 ## 14. Cronograma Estimado
 
 | Fase | Duração | Tarefas |
-|------|---------|---------|
+| --- | --- | --- |
 | **Fase 0: Pré-requisitos** | 1-2 semanas | Criar WhatsApp Business Account, Meta Business Portfolio, verificação, número dedicado, Meta App com WhatsApp use case |
 | **Fase 1: Infraestrutura** | 1 semana | Webhook controller + HMAC validation + config + feature flag + testes webhook |
 | **Fase 2: Core** | 1.5 semanas | State machine + StepValidator + ConversationService + WhatsAppClient + testes unitários |
@@ -887,7 +895,7 @@ Content-Type: application/json
 ### 15.1 O que NÃO muda
 
 | Componente | Status |
-|------------|--------|
+| --- | --- |
 | `OrderForm.tsx` (frontend) | Continua funcionando — WhatsApp web é canal complementar |
 | `OrderController.java` | Intacto — chatbot usa `OrderService` diretamente |
 | `OrderService.java` | Intacto — reusado pelo `ConversationService` |
@@ -898,7 +906,7 @@ Content-Type: application/json
 ### 15.2 O que muda
 
 | Componente | Mudança |
-|------------|---------|
+| --- | --- |
 | `pom.xml` | Adicionar dependência de HTTP client (WebClient ou RestTemplate) |
 | `application.properties` | Novo bloco `whatsapp.*` |
 | `application-prod.properties` | `whatsapp.enabled=true` |
@@ -911,6 +919,7 @@ Content-Type: application/json
 > **C6: Frontend nunca chama backend — orders vão diretamente para WhatsApp**
 
 O chatbot é a **solução definitiva** para C6:
+
 - Pedidos via chatbot chamam `OrderService.createOrder()` → persistidos em banco
 - Frontend web continua como está (mudança seria em fase futura)
 - Backend deixa de ser código morto
@@ -955,15 +964,15 @@ WHATSAPP_CONVERSATION_TIMEOUT_MINUTES=30                 # default
 ## 18. Referências
 
 | Recurso | URL |
-|---------|-----|
-| WhatsApp Cloud API Docs | https://developers.facebook.com/docs/whatsapp/cloud-api |
-| Pricing (per-message, jul/2025) | https://developers.facebook.com/docs/whatsapp/pricing |
-| Get Started Guide | https://developers.facebook.com/docs/whatsapp/cloud-api/get-started |
-| Interactive Messages | https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive |
-| Template Messages | https://developers.facebook.com/docs/whatsapp/cloud-api/messages/template |
-| Webhooks Reference | https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks |
-| System User Tokens | https://developers.facebook.com/docs/whatsapp/business-management-api/get-started |
-| Jasper's Market Sample | https://github.com/fbsamples/whatsapp-business-jaspers-market |
+| --- | --- |
+| WhatsApp Cloud API Docs | <https://developers.facebook.com/docs/whatsapp/cloud-api> |
+| Pricing (per-message, jul/2025) | <https://developers.facebook.com/docs/whatsapp/pricing> |
+| Get Started Guide | <https://developers.facebook.com/docs/whatsapp/cloud-api/get-started> |
+| Interactive Messages | <https://developers.facebook.com/docs/whatsapp/cloud-api/messages/interactive> |
+| Template Messages | <https://developers.facebook.com/docs/whatsapp/cloud-api/messages/template> |
+| Webhooks Reference | <https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks> |
+| System User Tokens | <https://developers.facebook.com/docs/whatsapp/business-management-api/get-started> |
+| Jasper's Market Sample | <https://github.com/fbsamples/whatsapp-business-jaspers-market> |
 | REVIEW_AND_IMPROVEMENTS.md (issue C6) | docs/REVIEW_AND_IMPROVEMENTS.md |
 | useOrderFormValidation.ts | src/component/OrderForm/useOrderFormValidation.ts |
 | CreateOrderRequest.java | backend/src/main/java/com/robertafurucho/order/CreateOrderRequest.java |

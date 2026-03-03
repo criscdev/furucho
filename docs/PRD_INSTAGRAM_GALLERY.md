@@ -28,7 +28,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ## 3. Objetivos & Métricas de Sucesso
 
 | Objetivo | Métrica | Meta |
-|----------|---------|------|
+| --- | --- | --- |
 | Galeria com conteúdo real | Nº de placeholders visíveis | 0 |
 | Atualização automática | Tempo entre post no IG e aparição no site | ≤ 15 min |
 | SEO da galeria | Imagens indexáveis no primeiro HTML (SSR) | 100% dos posts |
@@ -41,7 +41,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ## 4. Público-Alvo
 
 | Persona | Necessidade |
-|---------|-------------|
+| --- | --- |
 | **Visitante** | Ver portfólio real de bonecas antes de encomendar |
 | **Roberta (dona)** | Publicar uma vez (Instagram) e ter o site atualizado automaticamente |
 | **Google/SEO** | Indexar imagens reais com alt text descritivo |
@@ -87,7 +87,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-01 — Sincronização automática do feed
 
 | Aspecto | Detalhe |
-|---------|---------|
+| --- | --- |
 | **Trigger** | `@Scheduled` a cada 15 minutos |
 | **Fonte** | `GET /v25.0/{userId}/media?fields=id,media_type,media_url,caption,timestamp,permalink,children{id}&limit=50` |
 | **Filtro** | `media_type` IN (IMAGE, CAROUSEL_ALBUM) — exclui VIDEO |
@@ -101,7 +101,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-02 — Refresh automático de token
 
 | Aspecto | Detalhe |
-|---------|---------|
+| --- | --- |
 | **Frequência** | Cron a cada dia 1 e 15 do mês (`0 0 3 1,15 * *`) |
 | **Mecanismo** | `GET /refresh_access_token?grant_type=ig_refresh_token&access_token={token}` |
 | **Armazenamento** | `AtomicReference<String>` em memória (sobrevive durante o uptime) |
@@ -110,7 +110,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-03 — API REST da galeria
 
 | Endpoint | Método | Response | Descrição |
-|----------|--------|----------|-----------|
+| --- | --- | --- | --- |
 | `/api/instagram/feed?page=0&size=12` | GET | `Page<InstagramPostResponse>` | Feed paginado, ordenado por timestamp DESC |
 | `/api/instagram/feed/latest?count=6` | GET | `List<InstagramPostResponse>` | N posts mais recentes (teaser home) |
 
@@ -119,7 +119,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-04 — Rota `/galeria` com SSR
 
 | Aspecto | Detalhe |
-|---------|---------|
+| --- | --- |
 | **Loader** | Server-side `fetch` ao backend `/api/instagram/feed?page=0&size=12` |
 | **Fallback** | Se backend não responder → `posts: []`, exibe mensagem amigável com link pro Instagram |
 | **Paginação** | Botão "Carregar mais" usa `useFetcher` do React Router para buscar próxima página |
@@ -129,7 +129,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-05 — Teaser na home
 
 | Aspecto | Detalhe |
-|---------|---------|
+| --- | --- |
 | **Loader** | Server-side `fetch` ao backend `/api/instagram/feed/latest?count=6` |
 | **Gallery** | Recebe `instagramPosts` prop; se presente, usa no lugar dos placeholders |
 | **Graceful degradation** | Se fetch falhar → `instagramPosts = undefined` → Gallery mostra placeholders atuais |
@@ -138,7 +138,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 ### RF-06 — Navegação atualizada
 
 | Aspecto | Detalhe |
-|---------|---------|
+| --- | --- |
 | **Header** | Novo link "Galeria" na nav usando `<NavLink to="/galeria">` |
 | **Active state** | `NavLink` fornece `aria-current="page"` e classe `.active` automaticamente |
 | **Ordem** | Início · Galeria · Encomendas · Instagram |
@@ -188,7 +188,7 @@ Integração direta com a **Instagram Graph API v25.0** (oficial Meta). O backen
 
 ## 8. Arquitetura
 
-```
+```text
 ┌──────────────┐    @Scheduled 15min     ┌────────────────────┐
 │              │ ──────────────────────►  │   Instagram        │
 │  Spring Boot │    GET /v25.0/media      │   Graph API v25.0  │
@@ -240,7 +240,7 @@ CREATE INDEX idx_instagram_posts_timestamp ON instagram_posts(timestamp DESC);
 
 ## 9. Estrutura de Arquivos (novos/modificados)
 
-```
+```text
 backend/src/main/java/com/robertafurucho/
   instagram/
     InstagramMediaType.java          ← enum
@@ -288,7 +288,7 @@ Modificados:
 ## 10. Plano de Testes
 
 | Camada | Arquivo | Foco | Qt. estimada |
-|--------|---------|------|-------------|
+| --- | --- | --- | --- |
 | Backend Unit | `InstagramSyncServiceTest` | Sync, upsert, filter, token refresh | ~10 |
 | Backend Unit | `InstagramFeedServiceTest` | Conversão DTO, defaults | ~4 |
 | Backend Unit | `InstagramFeedControllerTest` | HTTP, paginação, JSON shape | ~6 |
@@ -307,7 +307,7 @@ Modificados:
 ## 11. Riscos & Mitigações
 
 | Risco | Probabilidade | Impacto | Mitigação |
-|-------|--------------|---------|-----------|
+| --- | --- | --- | --- |
 | Token expira sem refresh funcionar | Média | Alto | Loga WARNING; dados cacheados continuam servindo; alerta manual |
 | Meta depreca API v25.0 | Baixa | Médio | Versionamento no URL fácil de trocar; Meta avisa com ~1 ano de antecedência |
 | CDN URLs do Instagram expiram | Alta | Baixo | Sync a cada 15min atualiza `mediaUrl`; se expirar entre syncs, `<img>` mostra bg lavender |

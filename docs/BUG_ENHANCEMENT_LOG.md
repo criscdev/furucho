@@ -145,3 +145,121 @@ Issues found during code reviews. Each entry tracks the problem, fix applied, an
 **Before:** 5× `2027-03-15` / `LocalDate.of(2027, 3, 15)` — will become past dates and break `@Future` validation.
 **Fix:** `FUTURE_DATE = LocalDate.now().plusMonths(6)` constant + `.formatted()` for JSON text blocks.
 **Status:** Fixed (Batch 1E)
+
+---
+
+## WhatsApp Chatbot Bug Review — 2026-03-03
+
+### W1 · BUG · 2026-03-03 — ConversationRepository: findActiveByWaId multi-row crash
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationRepository.java`
+**Before:** JPQL query with `ORDER BY createdAt DESC` returning `Optional<T>` — calls `getSingleResult()` internally. If a race condition creates duplicate active conversations, every subsequent message from that user crashes with `IncorrectResultSizeDataAccessException`.
+**Fix:** Changed to native query with `LIMIT 1`.
+**Severity:** CRITICAL
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W2 · BUG · 2026-03-03 — ConversationRepository: findLastCompletedByWaId multi-row crash
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationRepository.java`
+**Before:** Same issue as W1 — a returning customer with multiple completed conversations triggers `IncorrectResultSizeDataAccessException` on `/status` command.
+**Fix:** Changed to native query with `LIMIT 1`.
+**Severity:** CRITICAL
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W3 · BUG · 2026-03-03 — ConversationState: no @Version for optimistic locking
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationState.java`
+**Before:** No concurrency protection. Two concurrent webhook updates to the same conversation silently overwrite each other's data (last-write-wins).
+**Fix:** Added `@Version private Long version` field for JPA optimistic locking.
+**Severity:** CRITICAL
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W4 · BUG · 2026-03-03 — ConversationService: correction flow forces re-entry of all remaining fields
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationService.java`
+**Before:** When user selects "edit name" at CONFIRM, the flow goes ASK_NAME → ASK_EMAIL → ASK_PHONE → ... → CONFIRM (re-enters ALL fields after the corrected one). Should return directly to CONFIRM after the corrected field.
+**Fix:** Added `correcting` boolean to `ConversationState`. When true, `handleDataCollection` and `handleOrderScope` return to CONFIRM instead of calling `step.next()`.
+**Severity:** CRITICAL
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W5 · BUG · 2026-03-03 — WhatsAppClient: subscribe() without error consumer
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/WhatsAppClient.java`
+**Before:** `.subscribe()` with no arguments — `doOnError()` is a side-effect operator, error still propagates to subscribe. With no error consumer, throws `ErrorCallbackNotImplemented` on the async reactor thread, crashing it.
+**Fix:** Changed to `.subscribe(resp -> {}, err -> log.error(...))`.
+**Severity:** MAJOR
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W6 · BUG · 2026-03-03 — ConversationService: no auto-expire after maxRetries
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationService.java`
+**Before:** After `maxRetries` validation failures, user sees "you can /cancelar" but conversation stays active. Each new message resets `updatedAt`, preventing scheduled expiration. User is stuck forever.
+**Fix:** At `retries >= maxRetries`, conversation is auto-expired (EXPIRED + expired=true) and user notified.
+**Severity:** MAJOR
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W7 · BUG · 2026-03-03 — ConversationService: /status and /ajuda create orphan conversations
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationService.java`
+**Before:** Special commands were handled after `findActiveByWaId().orElseGet(createNew)` — `/status` and `/ajuda` always created a new GREETING conversation row that was never used.
+**Fix:** Moved `/status` and `/ajuda` handling before find-or-create block.
+**Severity:** MAJOR
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W8 · BUG · 2026-03-03 — ConversationState: setFieldForStep(ASK_DATE) no array bounds check
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/conversation/ConversationState.java`
+**Before:** `value.split("/")` with immediate `parts[0]`, `parts[1]`, `parts[2]` access — if a malformed date bypasses validator (or is called from test code), `ArrayIndexOutOfBoundsException`.
+**Fix:** Added `if (parts.length != 3)` guard before array access.
+**Severity:** MAJOR
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W9 · ENH · 2026-03-03 — InteractiveMessageBuilder: buildSummaryText renders "null"
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/message/InteractiveMessageBuilder.java`
+**Before:** `String.formatted(state.getName(), ...)` — if any field is null, the summary text shows the literal string "null" to the customer.
+**Fix:** Added `safe()` helper that returns "—" for null values.
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W10 · ENH · 2026-03-03 — ConversationExpirationJob: saves one-by-one instead of batch
+
+**File:** `backend/src/main/java/com/robertafurucho/whatsapp/scheduler/ConversationExpirationJob.java`
+**Before:** `repository.save(state)` inside the for-loop — N individual INSERT statements instead of one batch.
+**Fix:** Moved to `repository.saveAll(expired)` after the loop.
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W11 · BUG · 2026-03-03 — ConversationServiceTest: Strictness.LENIENT hides dead stubs
+
+**File:** `backend/src/test/java/com/robertafurucho/whatsapp/conversation/ConversationServiceTest.java`
+**Before:** `@MockitoSettings(strictness = Strictness.LENIENT)` suppressed all warnings about unnecessary stubbings — hiding false-positive tests and dead setup code.
+**Fix:** Removed LENIENT, fixed all resulting strict-stubbing violations.
+**Status:** Fixed (Batch 6B)
+
+---
+
+### W12 · BUG · 2026-03-03 — ConversationServiceTest: confirmCreatesOrder uses any() matcher
+
+**File:** `backend/src/test/java/com/robertafurucho/whatsapp/conversation/ConversationServiceTest.java`
+**Before:** `verify(orderService).createOrder(any())` — never verified that the field mapping from ConversationState to CreateOrderRequest was correct. A bug swapping name↔email would pass.
+**Fix:** Used `ArgumentCaptor<CreateOrderRequest>` to verify all 7 field values.
+**Status:** Fixed (Batch 6B)

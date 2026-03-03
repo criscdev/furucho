@@ -30,6 +30,8 @@
 - [x] **Batch 4B** — E2E P0: Keyboard + a11y
 - [x] **Batch 4C** — E2E P1-P2: Secundários
 - [x] **Batch 5A** — CI + documentação final
+- [x] **Batch 6A** — WhatsApp Chatbot implementation (12 prod + 5 test files, +74 tests)
+- [x] **Batch 6B** — WhatsApp Chatbot bug review & fixes (4 CRITICAL, 5 MAJOR, +2 tests)
 
 ---
 
@@ -358,6 +360,7 @@
 - `e2e/smoke.spec.ts` — 2 testes (já existente)
 
 **Resultado:** `npx vitest run` ✅ (91/91) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões
+
 ### Revisão Sênior — 18 issues (commit `45a0a02`) — 2026-03-02
 
 **Escopo:** Revisão completa do código (lupa de dev sênior) — 58 issues identificados, 18 corrigidos imediatamente (5 CRITICAL + 8 MAJOR + 5 MINOR), restante documentado no backlog.
@@ -453,9 +456,10 @@
 - `@ts-nocheck` → 0 ocorrências em código-fonte ✅
 - `fireEvent.` em testes → 0 ocorrências (todo usando `userEvent`) ✅
 
-**Issues encontrados: ZERO**
+#### Issues encontrados: ZERO
 
 O codebase está 100% consistente:
+
 - Todo conteúdo referencia exclusivamente biscuit/porcelana fria
 - Todos os testes usam datas dinâmicas (`.plusMonths(6)` / `futureDate()`)
 - Todas as mensagens de UI/validação estão em pt-BR
@@ -489,3 +493,74 @@ O codebase está 100% consistente:
 | Lines | ≥ 80% | 98.48% |
 
 **Resultado:** Todos os testes passando. Refatoração TDD concluída — 186 testes totais (95 vitest + 49 backend + 42 E2E).
+
+---
+
+### Batch 6A — WhatsApp Chatbot Implementation — 2026-03-03
+
+**Escopo:** Implementação completa do PRD 2 (WhatsApp Chatbot) — 12 arquivos de produção + 5 arquivos de teste.
+
+**Arquivos criados (produção):**
+
+- `whatsapp/WhatsAppConfig.java` — `@ConfigurationProperties(prefix = "whatsapp")` com nested Api, Webhook, Conversation
+- `whatsapp/WhatsAppSignatureValidator.java` — HMAC-SHA256 com `MessageDigest.isEqual()`
+- `whatsapp/WhatsAppClient.java` — Spring WebClient, `sendText()` e `sendInteractive()`
+- `whatsapp/WhatsAppWebhookController.java` — GET verify + POST messages
+- `whatsapp/conversation/ConversationStep.java` — 13-state enum com `next()`, `fromCorrectionFieldId()`, `isTerminal()`
+- `whatsapp/conversation/ConversationState.java` — JPA Entity com 8 campos de pedido
+- `whatsapp/conversation/ConversationRepository.java` — JPA repository com queries customizadas
+- `whatsapp/conversation/StepValidator.java` — Validação de todos os 8 campos
+- `whatsapp/conversation/ConversationService.java` — Máquina de estados central
+- `whatsapp/message/WhatsAppMessage.java` — DTOs do webhook payload
+- `whatsapp/message/InteractiveMessageBuilder.java` — Builders para buttons e lists
+- `whatsapp/message/TemplateMessageBuilder.java` — Builders para templates
+
+**Arquivos criados (testes):**
+
+- `StepValidatorTest.java` — 45 testes de validação
+- `WhatsAppSignatureValidatorTest.java` — 5 testes HMAC
+- `ConversationServiceTest.java` — 15 testes da máquina de estados
+- `WhatsAppWebhookControllerTest.java` — 6 testes do controller
+- `WhatsAppChatbotIntegrationTest.java` — 4 testes de integração (H2 real)
+
+**Arquivos modificados:**
+
+- `pom.xml` — adicionado `spring-boot-starter-webflux`
+- `application.properties` — bloco `whatsapp.*` completo
+- `application-prod.properties` — `whatsapp.enabled=true`
+- `FuruchoApiApplication.java` — `@EnableScheduling`
+
+**Resultado:** `./mvnw test` ✅ (123/123) | BUILD SUCCESS | +74 new tests
+
+---
+
+### Batch 6B — WhatsApp Chatbot Bug Review & Fixes — 2026-03-03
+
+**Escopo:** Revisão completa de código do chatbot. 15 bugs de produção e 18 issues de teste encontrados e corrigidos.
+
+**Correções CRÍTICAS (4):**
+
+1. `ConversationRepository.java` — `findActiveByWaId` e `findLastCompletedByWaId` retornavam `Optional<T>` mas queries podiam retornar múltiplas linhas → `IncorrectResultSizeDataAccessException`. **Fix:** Native queries com `LIMIT 1`
+2. `ConversationState.java` — Sem `@Version` para optimistic locking → updates concorrentes sobrescrevem dados silenciosamente. **Fix:** Adicionado `@Version private Long version`
+3. `ConversationService.java` — Fluxo de correção forçava re-entrada de todos os campos restantes. **Fix:** Adicionado campo `correcting` — retorna a CONFIRM após correção de campo único
+4. `ConversationService.java` — Após maxRetries, usuário ficava preso para sempre. **Fix:** Auto-expira conversa
+
+**Correções MAJOR (5):**
+
+1. `WhatsAppClient.java` — `subscribe()` sem error consumer → `ErrorCallbackNotImplemented` em thread async
+2. `ConversationService.java` — `/status` e `/ajuda` criavam conversas órfãs (find-or-create executado antes dos comandos)
+3. `ConversationState.java` — `setFieldForStep(ASK_DATE)` sem bounds check no `split("/")`
+4. `InteractiveMessageBuilder.java` — `buildSummaryText` renderizava "null" para campos ausentes
+5. `ConversationExpirationJob.java` — `save()` individual no loop em vez de `saveAll()` batch
+
+**Correções de teste (7):**
+
+- Removido `Strictness.LENIENT` (escondia stubbings desnecessários)
+- `confirmCreatesOrder` agora usa `ArgumentCaptor` para verificar mapeamento de campos
+- `maxRetriesAutoExpires` verifica estado EXPIRED
+- Adicionado teste `orderCreationFailure` para path de exceção
+- Adicionado teste `correctionReturnsToConfirm` para novo fluxo de correção
+- Testes de `/status` e `/ajuda` não criam mais conversas órfãs
+- Integration `correctionFlow` atualizado para correção de campo único
+
+**Resultado:** `./mvnw test` ✅ (125/125) | BUILD SUCCESS | +2 new tests, 5 tests updated

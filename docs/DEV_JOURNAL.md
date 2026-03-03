@@ -4,6 +4,122 @@ This journal tracks the development progress, decisions, and lessons learned dur
 
 ---
 
+## 2026-03-03 — WhatsApp Chatbot Bug Review & Fixes
+
+### Summary
+
+Comprehensive code review of the WhatsApp chatbot implementation (12 production + 5 test files). Identified 15 production bugs (4 CRITICAL, 5 MAJOR, 6 MINOR) and 18 test quality issues (3 CRITICAL, 8 MAJOR, 7 MINOR). All CRITICAL and MAJOR issues fixed in one session, plus selected MINOR fixes. Test count rose from 123 to 125, all green.
+
+### What Was Done
+
+#### CRITICAL Production Fixes (4)
+
+| Bug | File | Fix |
+| --- | --- | --- |
+| `findActiveByWaId` multi-row crash | `ConversationRepository.java` | Native query with `LIMIT 1` |
+| `findLastCompletedByWaId` multi-row crash | `ConversationRepository.java` | Native query with `LIMIT 1` |
+| No optimistic locking (concurrent updates overwrite data) | `ConversationState.java` | Added `@Version private Long version` |
+| Correction flow forces re-entry of all remaining fields | `ConversationService.java` | Added `correcting` flag — returns to CONFIRM after single-field correction |
+
+#### MAJOR Production Fixes (5)
+
+| Bug | File | Fix |
+| --- | --- | --- |
+| `subscribe()` without error consumer → `ErrorCallbackNotImplemented` | `WhatsAppClient.java` | Added error consumer lambda to `subscribe()` |
+| No auto-expire after maxRetries (user stuck forever) | `ConversationService.java` | Auto-expires conversation and notifies user |
+| `/status` and `/ajuda` create orphan conversations | `ConversationService.java` | Moved stateless commands before find-or-create |
+| `setFieldForStep(ASK_DATE)` no array bounds check | `ConversationState.java` | Added `parts.length != 3` guard |
+| `buildSummaryText` renders "null" for missing fields | `InteractiveMessageBuilder.java` | Added null-safe `safe()` helper |
+
+#### MINOR Production Fixes (1)
+
+| Bug | File | Fix |
+| --- | --- | --- |
+| Individual `save()` in expiration loop | `ConversationExpirationJob.java` | Batch `saveAll()` |
+
+#### Test Fixes (7 changes)
+
+- Removed `Strictness.LENIENT` from `ConversationServiceTest` (was hiding unnecessary stubbings)
+- Fixed dead `stateAt()` call and duplicate `stubSave()` in `sendsGreeting`
+- `confirmCreatesOrder` now uses `ArgumentCaptor` to verify all 7 field mappings
+- Renamed `maxRetriesHint` → `maxRetriesAutoExpires` with EXPIRED state assertion
+- Added `orderCreationFailure` test for exception path
+- Added `correctionReturnsToConfirm` test for new correction flow
+- Updated integration `correctionFlow` — single field correction, no re-fill
+
+### Files Modified (10)
+
+| File | Changes |
+| --- | --- |
+| `ConversationRepository.java` | Native queries with `LIMIT 1` |
+| `ConversationState.java` | `@Version`, `correcting` field, date bounds check |
+| `ConversationService.java` | Command ordering, correction flow, auto-expire |
+| `WhatsAppClient.java` | Error consumer on `subscribe()` |
+| `InteractiveMessageBuilder.java` | Null-safe summary, `safe()` helper |
+| `ConversationExpirationJob.java` | Batch `saveAll()` |
+| `ConversationServiceTest.java` | 7 test fixes, 2 new tests, removed LENIENT |
+| `WhatsAppChatbotIntegrationTest.java` | Updated correction flow test |
+
+### Test Counts
+
+| Suite | Before | After | Status |
+| --- | --- | --- | --- |
+| JUnit 5 (backend) | 123 | 125 | ✅ BUILD SUCCESS |
+
+### Key Technical Decisions
+
+| Decision | Rationale |
+| --- | --- |
+| Native query with LIMIT 1 | Prevents `IncorrectResultSizeDataAccessException` without changing return type |
+| `@Version` optimistic locking | Prevents silent data loss on concurrent webhook updates |
+| `correcting` boolean field | Single-field correction returns to CONFIRM vs. re-entering all remaining fields |
+| Auto-expire at maxRetries | Prevents user from being stuck in infinite retry loop |
+| Move /status /ajuda before find-or-create | Stateless commands should not create orphan conversation rows |
+
+---
+
+## 2026-03-03 — WhatsApp Chatbot Implementation
+
+### Summary
+
+Full implementation of PRD 2 (WhatsApp Chatbot) — 12 production files + 5 test files, 74 new backend tests. Chatbot collects 8 order fields via WhatsApp Cloud API with conversation state machine, HMAC-SHA256 webhook validation, interactive buttons/lists, correction flow, and scheduled expiration.
+
+### What Was Done
+
+- 12 production Java files in `com.robertafurucho.whatsapp` package
+- 5 test files (unit + integration) with 74 new tests
+- Configuration: `application.properties`, `application-prod.properties`, `pom.xml`, `@EnableScheduling`
+- Full state machine: GREETING → 8 fields → CONFIRM → COMPLETED
+- Interactive messages: buttons (order scope, confirmation) + lists (correction)
+- Special commands: /cancelar, /status, /ajuda
+- Scheduled expiration job (60s polling, configurable timeout)
+- Idempotency via lastMessageId deduplication
+
+### Test Counts
+
+| Suite | Before | After | Status |
+| --- | --- | --- | --- |
+| JUnit 5 (backend) | 49 | 123 | ✅ BUILD SUCCESS |
+
+---
+
+## 2026-03-03 — Markdown Lint Cleanup
+
+### Summary
+
+Fixed 448 markdown lint warnings across 6 documentation files + cleaned unused Java imports in 3 test files. Zero markdown errors remaining.
+
+### Files Fixed
+
+- `docs/TDD_REFACTORING_LOG.md` — 4 fixes
+- `docs/DEV_JOURNAL.md` — 17 fixes
+- `docs/REVIEW_AND_IMPROVEMENTS.md` — ~430 fixes (tables, MD036, MD032, MD022, MD026)
+- `docs/PRD_INSTAGRAM_GALLERY.md` — ~22 fixes (MD060, MD040)
+- `docs/WHATSAPP_CHATBOT_RESEARCH.md` — ~50 fixes (MD041, MD032, MD031, MD060, MD024, MD033, MD009, MD040, MD026, MD034)
+- `docs/PRD_WHATSAPP_CHATBOT.md` — ~51 fixes (MD040, MD060, MD032, MD031, MD036, MD034)
+
+---
+
 ## 2026-03-03 — TDD Refactoring Complete
 
 ### Summary
@@ -13,12 +129,14 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 ### What Was Done
 
 #### Testing Infrastructure (Batches 0A–0D)
+
 - Removed `@ts-nocheck`, fixed `vitest.config.ts` with `defineConfig()`
 - Installed `@vitest/coverage-v8` with 80% thresholds
 - Installed Playwright 1.58.2 with 3 browser projects (Chromium, Firefox, Mobile Chrome)
 - Installed MSW 2.12.10 with in-memory order store and 4 endpoint handlers
 
 #### Bug Fixes (Batches 1A–1E)
+
 - Fixed `lang="en"` → `lang="pt-BR"` on `<html>`
 - Fixed form focus bug (stale state in `handleSubmit`)
 - Removed redundant `@CrossOrigin` from controller (already in `WebConfig`)
@@ -26,6 +144,7 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 - Replaced hardcoded dates with dynamic `LocalDate.now().plusMonths(6)`
 
 #### Backend Tests (Batches 2A–2E)
+
 - OrderService: 17 tests (createOrder, queries, update, normalizations)
 - OrderController: 13 tests (CRUD, validation, error handling)
 - Rate Limiting Filter: 4 tests (standalone MockMvc, per-IP buckets)
@@ -34,6 +153,7 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 - Health: 3 tests (basic, ready, live)
 
 #### Frontend Tests (Batches 3A–3E)
+
 - Welcome: 17 tests (hero, CTA, about cards, semantic structure, axe)
 - useOrderFormValidation hook: 19 tests (extracted from OrderForm for SRP)
 - formatWhatsAppMessage utility: 6 tests (extracted for SRP)
@@ -42,22 +162,26 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 - Integration: 9 tests (full order flow with Header + Gallery + OrderForm)
 
 #### E2E Tests (Batches 4A–4C)
+
 - Happy path: form submit → WhatsApp redirect, validation errors
 - Keyboard & a11y: skip link, tab order, axe scans at 3 viewports
 - Secondary: CTA scroll, responsive gallery, SEO meta tags, Instagram security
 - WCAG fix: focus color contrast from 3.96:1 to 5.99:1
 
 #### Biscuit Scope Correction
+
 - All content updated to exclusively reference biscuit (porcelana fria) dolls
 - Removed all references to pano, feltro, crochê, amigurumi, tecidos
 
 #### CI & Documentation (Batch 5A)
+
 - Added `test:ci` script (vitest + playwright)
 - Updated CI workflows: JDK 17→21, added Playwright to frontend CI
 - Updated TESTING_STRATEGY.md with actual tools, versions, and counts
 - Coverage snapshot documented (98.48% stmts, 97.61% branches)
 
 #### 3 Senior Reviews
+
 - Review 1: 58 issues found, 18 fixed (focus, popup, i18n, a11y, rate limiter)
 - Review 2: 2 issues found, 2 fixed (Gallery alt text + JSDoc)
 - Review 3: Full 46-file audit, 0 issues found — codebase clean
@@ -118,7 +242,7 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 
 ## 2026-01-27 - Project Implementation Complete
 
-### What Was Done
+### Progress Made
 
 #### Frontend (React 19 + React Router 7)
 
@@ -198,14 +322,15 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 | Metric | Value |
 | ------ | ----- |
 | Frontend Tests (Vitest) | 95 passing |
-| Backend Tests (JUnit 5) | 49 passing |
+| Backend Tests (JUnit 5) | 125 passing |
 | E2E Tests (Playwright) | 42 passing (× 3 browsers) |
-| Total Tests | 186 |
+| **Total Tests** | **262** |
 | Components | 4 (Header, Welcome, Gallery, OrderForm) |
 | Hooks | 1 (useOrderFormValidation) |
 | Utilities | 1 (formatWhatsAppMessage) |
-| API Endpoints | 4 + health (3) |
-| Documentation Files | 9 |
+| API Endpoints | 4 + health (3) + webhook (2) |
+| WhatsApp Chatbot Files | 12 production + 5 test |
+| Documentation Files | 12 |
 
 ---
 

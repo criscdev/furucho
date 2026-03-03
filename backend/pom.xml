@@ -58,6 +58,12 @@
             <version>8.10.1</version>
         </dependency>
 
+        <!-- Spring WebFlux (for WebClient — WhatsApp Cloud API HTTP client) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
