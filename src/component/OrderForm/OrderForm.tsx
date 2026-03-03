@@ -172,10 +172,17 @@ export function OrderForm({
     }
 
     try {
+      // Normalize data before sending to backend to match backend validation
+      const normalizedData = {
+        ...formData,
+        phone: formData.phone.replace(/\D/g, ""),
+        postalCode: formData.postalCode.replace(/-/g, "")
+      };
+
       const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage()}`;
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
       setSubmitStatus("success");
-      onSubmitSuccess?.(formData);
+      onSubmitSuccess?.(normalizedData);
     } catch {
       setSubmitStatus("error");
     }
