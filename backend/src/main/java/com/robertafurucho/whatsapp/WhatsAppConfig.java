@@ -18,6 +18,7 @@ public class WhatsAppConfig {
     private Webhook webhook = new Webhook();
     private String appSecret = "";
     private Conversation conversation = new Conversation();
+    private Notification notification = new Notification();
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
@@ -33,6 +34,9 @@ public class WhatsAppConfig {
 
     public Conversation getConversation() { return conversation; }
     public void setConversation(Conversation conversation) { this.conversation = conversation; }
+
+    public Notification getNotification() { return notification; }
+    public void setNotification(Notification notification) { this.notification = notification; }
 
     public static class Api {
         private String baseUrl = "https://graph.facebook.com/v25.0";
@@ -65,5 +69,13 @@ public class WhatsAppConfig {
 
         public int getMaxRetriesPerField() { return maxRetriesPerField; }
         public void setMaxRetriesPerField(int maxRetriesPerField) { this.maxRetriesPerField = maxRetriesPerField; }
+    }
+
+    public static class Notification {
+        /** Roberta's WhatsApp ID — receives alerts when new orders arrive. */
+        private String robertaWaId = "";
+
+        public String getRobertaWaId() { return robertaWaId; }
+        public void setRobertaWaId(String robertaWaId) { this.robertaWaId = robertaWaId; }
     }
 }
