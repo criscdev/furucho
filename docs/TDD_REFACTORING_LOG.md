@@ -29,7 +29,7 @@
 - [x] **Batch 4A** — E2E P0: Happy path + validação
 - [x] **Batch 4B** — E2E P0: Keyboard + a11y
 - [x] **Batch 4C** — E2E P1-P2: Secundários
-- [ ] **Batch 5A** — CI + documentação final
+- [x] **Batch 5A** — CI + documentação final
 
 ---
 
@@ -468,3 +468,24 @@ O codebase está 100% consistente:
 - 0 TypeScript `any` / `@ts-nocheck` / `@ts-ignore` no código-fonte
 
 **Resultado:** `npx vitest run` ✅ (95/95) | `./mvnw test` ✅ (49/49) | `npx playwright test` ✅ (42/42 × 3 browsers) | 0 regressões | **0 alterações necessárias**
+
+### Batch 5A — CI + documentação final — 2026-03-03
+
+**Alterações:**
+
+- `package.json` — adicionado script `test:ci` que roda `vitest run && playwright test`
+- `.github/workflows/backend.yml` — JDK 17 → 21 (build e deploy sections) para alinhar com Dockerfile e `pom.xml`
+- `.github/workflows/frontend.yml` — substituído `npm test -- --run` por: `npx vitest run` + instalação Playwright + `npx playwright test --project=chromium`
+- `docs/TESTING_STRATEGY.md` — reescrito com tabela de ferramentas/versões, coverage baseline, contagem de testes, comandos atualizados
+- `docs/DEV_JOURNAL.md` — adicionada entrada completa da refatoração TDD (2026-03-03), estatísticas atualizadas (186 testes), file structure atualizada
+
+**Snapshot de cobertura (frontend):**
+
+| Métrica | Target | Actual |
+| --- | --- | --- |
+| Statements | ≥ 80% | 98.48% |
+| Branches | ≥ 80% | 97.61% |
+| Functions | ≥ 80% | 88.23% |
+| Lines | ≥ 80% | 98.48% |
+
+**Resultado:** Todos os testes passando. Refatoração TDD concluída — 186 testes totais (95 vitest + 49 backend + 42 E2E).

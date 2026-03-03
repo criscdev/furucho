@@ -1,6 +1,96 @@
 # Development Journal - Roberta Furucho Platform
 
-This journal tracks the development progress, decisions, and lessons learned during the creation of the Roberta Furucho handmade dolls platform.
+This journal tracks the development progress, decisions, and lessons learned during the creation of the Roberta Furucho handmade biscuit dolls platform.
+
+---
+
+## 2026-03-03 — TDD Refactoring Complete
+
+### Summary
+
+Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backend tests to a comprehensive 186-test suite across 3 layers.
+
+### What Was Done
+
+#### Testing Infrastructure (Batches 0A–0D)
+- Removed `@ts-nocheck`, fixed `vitest.config.ts` with `defineConfig()`
+- Installed `@vitest/coverage-v8` with 80% thresholds
+- Installed Playwright 1.58.2 with 3 browser projects (Chromium, Firefox, Mobile Chrome)
+- Installed MSW 2.12.10 with in-memory order store and 4 endpoint handlers
+
+#### Bug Fixes (Batches 1A–1E)
+- Fixed `lang="en"` → `lang="pt-BR"` on `<html>`
+- Fixed form focus bug (stale state in `handleSubmit`)
+- Removed redundant `@CrossOrigin` from controller (already in `WebConfig`)
+- Removed unused Lombok dependency, upgraded Dockerfile to Java 21
+- Replaced hardcoded dates with dynamic `LocalDate.now().plusMonths(6)`
+
+#### Backend Tests (Batches 2A–2E)
+- OrderService: 17 tests (createOrder, queries, update, normalizations)
+- OrderController: 13 tests (CRUD, validation, error handling)
+- Rate Limiting Filter: 4 tests (standalone MockMvc, per-IP buckets)
+- Integration: 6 tests (@SpringBootTest + H2, full lifecycle)
+- Repository: 6 tests (@DataJpaTest, custom queries)
+- Health: 3 tests (basic, ready, live)
+
+#### Frontend Tests (Batches 3A–3E)
+- Welcome: 17 tests (hero, CTA, about cards, semantic structure, axe)
+- useOrderFormValidation hook: 19 tests (extracted from OrderForm for SRP)
+- formatWhatsAppMessage utility: 6 tests (extracted for SRP)
+- OrderForm: 11 tests (submission, popup detection, a11y)
+- Home route: 10 tests (meta tags, composition)
+- Integration: 9 tests (full order flow with Header + Gallery + OrderForm)
+
+#### E2E Tests (Batches 4A–4C)
+- Happy path: form submit → WhatsApp redirect, validation errors
+- Keyboard & a11y: skip link, tab order, axe scans at 3 viewports
+- Secondary: CTA scroll, responsive gallery, SEO meta tags, Instagram security
+- WCAG fix: focus color contrast from 3.96:1 to 5.99:1
+
+#### Biscuit Scope Correction
+- All content updated to exclusively reference biscuit (porcelana fria) dolls
+- Removed all references to pano, feltro, crochê, amigurumi, tecidos
+
+#### CI & Documentation (Batch 5A)
+- Added `test:ci` script (vitest + playwright)
+- Updated CI workflows: JDK 17→21, added Playwright to frontend CI
+- Updated TESTING_STRATEGY.md with actual tools, versions, and counts
+- Coverage snapshot documented (98.48% stmts, 97.61% branches)
+
+#### 3 Senior Reviews
+- Review 1: 58 issues found, 18 fixed (focus, popup, i18n, a11y, rate limiter)
+- Review 2: 2 issues found, 2 fixed (Gallery alt text + JSDoc)
+- Review 3: Full 46-file audit, 0 issues found — codebase clean
+
+### Final Test Counts
+
+| Suite | Count | Status |
+| --- | --- | --- |
+| Vitest (frontend unit + integration) | 95 | ✅ |
+| JUnit 5 (backend) | 49 | ✅ |
+| Playwright (E2E × 3 browsers) | 42 | ✅ |
+| **Total** | **186** | ✅ |
+
+### Coverage (Frontend)
+
+| Metric | Value |
+| --- | --- |
+| Statements | 98.48% |
+| Branches | 97.61% |
+| Functions | 88.23% |
+| Lines | 98.48% |
+
+### Key Technical Decisions
+
+| Decision | Rationale |
+| --- | --- |
+| Extract useOrderFormValidation hook | SRP — OrderForm went from 431→343 lines |
+| Extract formatWhatsAppMessage utility | Pure function, independently testable |
+| RateLimitingFilter (not @Component) | Isolates from @WebMvcTest slices |
+| Smart eviction (only full buckets) | Prevents premature bucket removal under load |
+| @axe-core/playwright for E2E a11y | Catches viewport-specific violations |
+| Dynamic dates in all tests | Prevents future @Future annotation flakes |
+| userEvent over fireEvent | Realistic event sequencing, better a11y testing |
 
 ---
 
@@ -107,11 +197,15 @@ This journal tracks the development progress, decisions, and lessons learned dur
 
 | Metric | Value |
 | ------ | ----- |
-| Frontend Tests | 15 passing |
+| Frontend Tests (Vitest) | 95 passing |
+| Backend Tests (JUnit 5) | 49 passing |
+| E2E Tests (Playwright) | 42 passing (× 3 browsers) |
+| Total Tests | 186 |
 | Components | 4 (Header, Welcome, Gallery, OrderForm) |
-| API Endpoints | 4 |
-| Documentation Files | 6 |
-| Total Files Created | ~30 |
+| Hooks | 1 (useOrderFormValidation) |
+| Utilities | 1 (formatWhatsAppMessage) |
+| API Endpoints | 4 + health (3) |
+| Documentation Files | 9 |
 
 ---
 
@@ -119,15 +213,18 @@ This journal tracks the development progress, decisions, and lessons learned dur
 
 ```text
 furucho/
-├── app/                    # React Router routes
-├── src/component/          # Reusable components
-├── backend/                # Spring Boot API
+├── app/                    # React Router routes (home, root)
+├── src/component/          # Reusable components (Header, Gallery, OrderForm)
+├── src/mocks/              # MSW handlers + server
+├── src/test/               # Integration tests + factories
+├── e2e/                    # Playwright E2E specs
+├── backend/                # Spring Boot API (Java 21)
 ├── docs/                   # Project documentation
-└── .github/workflows/      # CI/CD pipelines
+└── .github/workflows/      # CI/CD pipelines (frontend + backend)
 ```
 
 ---
 
 ## Last Updated
 
-2026-01-27
+2026-03-03

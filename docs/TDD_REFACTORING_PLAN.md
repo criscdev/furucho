@@ -3,7 +3,7 @@
 > **Autor:** AI Assistant (Claude Opus 4.6) sob direção de Cristina Carvalho (NTT Data)
 > **Data de criação:** 2026-02-23
 > **Última revisão:** 2026-02-23 (rev 2 — pós upgrade Java 21)
-> **Status:** DRAFT — aguardando execução incremental
+> **Status:** CONCLUÍDO — todas as tasks executadas (0A–5A)
 
 ---
 
