@@ -99,7 +99,7 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 ### Issues Fixed
 
 - **Removed malformed file**: Deleted rogue `package.json (edit: add a "test" script...)` file
-- **Spring Boot upgrade**: Updated from 3.2.5 to 3.4.1 for latest features
+- **Spring Boot upgrade**: Updated from 3.2.5 to 3.5.11 for latest features
 - **Bucket4j API**: Migrated from deprecated `Bandwidth.simple()` to new builder API
 - **Test annotation**: Replaced deprecated `@MockBean` with `@MockitoBean` for Spring Boot 3.4
 - **Markdown formatting**: Fixed all tables, code blocks, and list formatting across docs
@@ -108,7 +108,7 @@ Full TDD refactoring of the Furucho codebase, from 15 frontend tests and 8 backe
 
 ### Files Modified
 
-- `backend/pom.xml` - Spring Boot 3.4.1
+- `backend/pom.xml` - Spring Boot 3.5.11
 - `backend/.../OrderController.java` - New Bucket4j builder API
 - `backend/.../OrderControllerTest.java` - @MockitoBean annotation
 - `README.md` - Fixed formatting, updated Spring version

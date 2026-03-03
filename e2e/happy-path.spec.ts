@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+/** Returns a date 6 months from now as DD/MM/YYYY. */
+function futureDate(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
 /**
  * E2E — Happy path & validation (Batch 4A).
  *
@@ -42,7 +51,7 @@ test.describe('Happy path & validation', () => {
     await page.getByLabel(/cep/i).fill('01234567');
     await page.getByLabel(/tipo de boneca desejada/i).fill('Boneca personalizada');
     await page.getByLabel(/detalhes da boneca/i).fill('Cabelo loiro, vestido azul');
-    await page.getByLabel(/data desejada para receber/i).fill('15/04/2026');
+    await page.getByLabel(/data desejada para receber/i).fill(futureDate());
 
     // Submit
     await page.getByRole('button', { name: /enviar pelo whatsapp/i }).click();

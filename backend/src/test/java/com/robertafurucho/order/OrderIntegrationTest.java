@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *           {@link OrderServiceTest} and {@link OrderControllerTest} cover
  *           individual layers in isolation.
  */
-@SuppressWarnings("null") // Spring MockMvc @NonNull params quirk
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("Order Integration (POST→GET→PATCH→GET)")

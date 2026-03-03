@@ -25,7 +25,7 @@ O Furucho é uma plataforma de encomendas de bonecas artesanais da Roberta Furuc
 **Stack:**
 
 - Frontend: React 19 + React Router 7 + TailwindCSS 4 + TypeScript 5
-- Backend: Spring Boot 3.4.1 + Java 21 + H2 (dev) / PostgreSQL (prod)
+- Backend: Spring Boot 3.5.11 + Java 21 + H2 (dev) / PostgreSQL (prod)
 - Testes: Vitest + RTL + jest-axe (front) / JUnit 5 + Mockito + MockMvc (back)
 
 **Audit realizado em 2026-02-23** revelou:

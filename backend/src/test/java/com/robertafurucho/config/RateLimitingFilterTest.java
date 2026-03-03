@@ -40,8 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *           intentionally NOT a @Component (see WebConfig). This lets us
  *           test the filter in complete isolation.
  */
-// Spring MockMvc builder methods use @NonNull params that trigger false positives
-@SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RateLimitingFilter")
 class RateLimitingFilterTest {

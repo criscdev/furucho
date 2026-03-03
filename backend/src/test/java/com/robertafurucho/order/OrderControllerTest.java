@@ -24,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Unit tests for OrderController.
  */
-@SuppressWarnings("null")
 @WebMvcTest(OrderController.class)
 class OrderControllerTest {
 
