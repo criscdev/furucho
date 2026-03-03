@@ -1,5 +1,7 @@
 package com.robertafurucho.order;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * REST controller for order management.
@@ -24,10 +25,18 @@ import java.util.concurrent.ConcurrentHashMap;
 @CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class OrderController {
 
+    // Rate limiting configuration
+    private static final int RATE_LIMIT_CACHE_MAX_SIZE = 10_000;
+    private static final Duration RATE_LIMIT_CACHE_TTL = Duration.ofMinutes(10);
+
     private final OrderService orderService;
     
-    // Rate limiting: Map of IP -> Bucket
-    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+    // Rate limiting: Cache of IP -> Bucket with automatic expiration
+    // Entries expire after inactivity to prevent memory leaks
+    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
+        .expireAfterAccess(RATE_LIMIT_CACHE_TTL)
+        .maximumSize(RATE_LIMIT_CACHE_MAX_SIZE)
+        .build();
 
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
@@ -97,9 +106,10 @@ public class OrderController {
     /**
      * Creates or retrieves a rate limit bucket for the given key.
      * Limit: 5 requests per minute per IP.
+     * Buckets are cached with automatic expiration after 10 minutes of inactivity.
      */
     private Bucket resolveBucket(String key) {
-        return buckets.computeIfAbsent(key, k -> {
+        return buckets.get(key, k -> {
             Bandwidth limit = Bandwidth.builder()
                 .capacity(5)
                 .refillGreedy(5, Duration.ofMinutes(1))
