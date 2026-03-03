@@ -1,7 +1,5 @@
 package com.robertafurucho.whatsapp;
 
-import com.robertafurucho.whatsapp.conversation.ConversationService;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,10 +8,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,7 +31,7 @@ class WhatsAppWebhookControllerTest {
     private WhatsAppSignatureValidator signatureValidator;
 
     @MockitoBean
-    private ConversationService conversationService;
+    private WhatsAppMessageProcessor messageProcessor;
 
     // ── GET /api/webhooks/whatsapp (verification) ─
 
@@ -135,7 +129,7 @@ class WhatsAppWebhookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("EVENT_RECEIVED"));
 
-            verify(conversationService).processMessage(
+            verify(messageProcessor).processMessage(
                 eq("5511999991234"), eq("wamid.abc123"), eq("text"), eq("Oi"), isNull());
         }
 
@@ -151,7 +145,7 @@ class WhatsAppWebhookControllerTest {
                     .header("X-Hub-Signature-256", "sha256=bad"))
                 .andExpect(status().isUnauthorized());
 
-            verify(conversationService, never()).processMessage(
+            verify(messageProcessor, never()).processMessage(
                 anyString(), anyString(), anyString(), anyString(), any());
         }
 
@@ -165,6 +159,42 @@ class WhatsAppWebhookControllerTest {
                     .content(WEBHOOK_PAYLOAD)
                     .header("X-Hub-Signature-256", "sha256=valid"))
                 .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("skips non-message webhook fields (e.g. statuses)")
+        void skipsStatusUpdates() throws Exception {
+            when(config.isEnabled()).thenReturn(true);
+            when(signatureValidator.isValid(any(byte[].class), anyString())).thenReturn(true);
+
+            String statusPayload = """
+                {
+                    "object": "whatsapp_business_account",
+                    "entry": [{
+                        "id": "123",
+                        "changes": [{
+                            "value": {
+                                "messaging_product": "whatsapp",
+                                "metadata": {
+                                    "display_phone_number": "5511999990000",
+                                    "phone_number_id": "phone123"
+                                }
+                            },
+                            "field": "statuses"
+                        }]
+                    }]
+                }
+                """;
+
+            mockMvc.perform(post("/api/webhooks/whatsapp")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(statusPayload)
+                    .header("X-Hub-Signature-256", "sha256=valid"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("EVENT_RECEIVED"));
+
+            verify(messageProcessor, never()).processMessage(
+                anyString(), anyString(), anyString(), anyString(), any());
         }
     }
 }

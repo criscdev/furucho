@@ -1,7 +1,6 @@
 package com.robertafurucho.whatsapp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.robertafurucho.whatsapp.conversation.ConversationService;
 import com.robertafurucho.whatsapp.message.WhatsAppMessage;
 
 import org.slf4j.Logger;
@@ -19,9 +18,9 @@ import org.springframework.web.bind.annotation.*;
  *   <li><strong>POST</strong> — Inbound message processing with HMAC-SHA256 validation</li>
  * </ul>
  *
- * <p>The POST handler must return 200 within 5 seconds per Meta's requirements.
- * Message processing is delegated to {@link ConversationService} synchronously
- * but the outbound WhatsApp API calls are async (fire-and-forget).
+ * <p>The POST handler returns 200 immediately and delegates message
+ * processing to {@link WhatsAppMessageProcessor} on a background thread,
+ * ensuring compliance with Meta's 5-second response requirement.
  */
 @RestController
 @RequestMapping("/api/webhooks/whatsapp")
@@ -31,17 +30,17 @@ public class WhatsAppWebhookController {
 
     private final WhatsAppConfig config;
     private final WhatsAppSignatureValidator signatureValidator;
-    private final ConversationService conversationService;
+    private final WhatsAppMessageProcessor messageProcessor;
     private final ObjectMapper objectMapper;
 
     public WhatsAppWebhookController(
             WhatsAppConfig config,
             WhatsAppSignatureValidator signatureValidator,
-            ConversationService conversationService,
+            WhatsAppMessageProcessor messageProcessor,
             ObjectMapper objectMapper) {
         this.config = config;
         this.signatureValidator = signatureValidator;
-        this.conversationService = conversationService;
+        this.messageProcessor = messageProcessor;
         this.objectMapper = objectMapper;
     }
 
@@ -112,7 +111,8 @@ public class WhatsAppWebhookController {
     }
 
     /**
-     * Extracts messages from the webhook payload and delegates processing.
+     * Extracts messages from the webhook payload and enqueues them for async processing.
+     * Skips non-message changes (e.g. status updates with field != "messages").
      */
     private void processPayload(WhatsAppMessage.WebhookPayload payload) {
         if (payload == null || payload.entry() == null) return;
@@ -121,6 +121,12 @@ public class WhatsAppWebhookController {
             if (entry.changes() == null) continue;
 
             for (WhatsAppMessage.Change change : entry.changes()) {
+                // Skip non-message webhooks (status updates, errors, etc.)
+                if (change.field() != null && !"messages".equals(change.field())) {
+                    log.debug("Skipping non-message webhook field: {}", change.field());
+                    continue;
+                }
+
                 if (change.value() == null || change.value().messages() == null) continue;
 
                 for (WhatsAppMessage.Message message : change.value().messages()) {
@@ -130,13 +136,9 @@ public class WhatsAppWebhookController {
                     String textBody = (message.text() != null) ? message.text().body() : null;
                     WhatsAppMessage.Interactive interactive = message.interactive();
 
-                    try {
-                        conversationService.processMessage(
-                            waId, messageId, type, textBody, interactive);
-                    } catch (Exception e) {
-                        log.error("Error processing message {} from {}: {}",
-                            messageId, waId, e.getMessage(), e);
-                    }
+                    // Delegate to async processor — returns immediately
+                    messageProcessor.processMessage(
+                        waId, messageId, type, textBody, interactive);
                 }
             }
         }
