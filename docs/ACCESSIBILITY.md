@@ -9,7 +9,7 @@ Compliant with **WCAG 2.2 Level AA** (W3C Recommendation, October 2023).
 | ------ | ------------------------------------ | ----- | ----------------------------------------------- |
 | 2.4.11 | Focus Not Obscured (Minimum)         | AA    | ✅ No sticky overlays or modals that hide focus |
 | 2.5.7  | Dragging Movements                   | AA    | ✅ N/A — no drag-and-drop UI                    |
-| 2.5.8  | Target Size (Minimum)                | AA    | ✅ All interactive targets ≥ 44×44 CSS px       |
+| 2.5.8  | Target Size (Minimum)                | AA    | ✅ All interactive targets ≥ 44×44 via min-h/w     |
 | 3.2.6  | Consistent Help                      | A     | ✅ N/A — single-page app                        |
 | 3.3.7  | Redundant Entry                      | A     | ✅ N/A — single-step form                       |
 | 3.3.8  | Accessible Authentication (Minimum)  | AA    | ✅ N/A — no authentication                      |

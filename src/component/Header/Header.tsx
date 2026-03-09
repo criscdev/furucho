@@ -38,7 +38,7 @@ export function Header({
           {/* Brand */}
           <a 
             href="/" 
-            className="text-xl font-bold hover:opacity-80 transition-opacity"
+            className="inline-flex items-center min-h-[44px] text-xl font-bold hover:opacity-80 transition-opacity"
             style={{ color: 'var(--color-text-heading)' }}
           >
             Roberta Furucho
