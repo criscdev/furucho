@@ -71,7 +71,7 @@ export function Welcome({
             href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn btn-secondary text-lg px-8 py-3 inline-flex items-center gap-2"
+            className="btn btn-secondary text-lg px-8 py-3 min-h-[44px] inline-flex items-center gap-2"
             aria-label="Seguir Roberta Furucho no Instagram (abre em nova aba)"
           >
             <svg 

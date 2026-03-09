@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { futureDate } from './helpers';
 
 /**
  * E2E — Keyboard navigation & accessibility audit (Batch 4B).
@@ -127,15 +128,7 @@ test.describe('Keyboard & accessibility', () => {
     await page.keyboard.type('Cabelo loiro, vestido azul');
 
     await page.keyboard.press('Tab');
-
-    const futureDate = (() => {
-      const d = new Date();
-      d.setMonth(d.getMonth() + 6);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      return `${dd}/${mm}/${d.getFullYear()}`;
-    })();
-    await page.keyboard.type(futureDate);
+    await page.keyboard.type(futureDate());
 
     // Tab to submit button and press Enter
     await page.keyboard.press('Tab');
@@ -164,6 +157,12 @@ test.describe('Keyboard & accessibility', () => {
   // 4B.6 — WCAG 2.2 SC 2.5.8 Target Size (Minimum) ≥ 24×24 CSS px
   test('interactive elements meet 24×24 minimum target size (WCAG 2.5.8)', async ({ page }) => {
     const MIN = 24;
+
+    // Brand link
+    const brandLink = page.getByRole('link', { name: 'Roberta Furucho', exact: true });
+    const brandBox = await brandLink.boundingBox();
+    expect(brandBox, 'Brand link has bounding box').toBeTruthy();
+    expect(brandBox!.height).toBeGreaterThanOrEqual(MIN);
 
     // Header nav links
     for (const name of ['Início', 'Encomendas']) {
