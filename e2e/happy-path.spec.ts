@@ -1,13 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-/** Returns a date 6 months from now as DD/MM/YYYY. */
-function futureDate(): string {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 6);
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  return `${dd}/${mm}/${d.getFullYear()}`;
-}
+import { futureDate } from './helpers';
 
 /**
  * E2E — Happy path & validation (Batch 4A).
