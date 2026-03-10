@@ -66,7 +66,11 @@ export function OrderForm({
       }
 
       setSubmitStatus("success");
-      onSubmitSuccess?.(formData);
+      onSubmitSuccess?.({
+        ...formData,
+        phone: formData.phone.replace(/\D/g, ""),
+        postalCode: formData.postalCode.replace(/-/g, ""),
+      });
       reset();
     } catch {
       setSubmitStatus("error");

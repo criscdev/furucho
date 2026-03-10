@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for OrderController.
  */
 @WebMvcTest(OrderController.class)
+@SuppressWarnings("null")
 class OrderControllerTest {
 
     /** Always-future date so @Future validation never flakes. */

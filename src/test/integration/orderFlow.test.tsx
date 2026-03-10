@@ -119,8 +119,12 @@ describe('Order Flow Integration', () => {
       );
     });
 
-    // Verify success callback was called
-    expect(onSuccess).toHaveBeenCalledWith(orderData);
+    // Verify success callback was called with normalized data
+    expect(onSuccess).toHaveBeenCalledWith({
+      ...orderData,
+      phone: orderData.phone.replace(/\D/g, ""),
+      postalCode: orderData.postalCode.replace(/-/g, "")
+    });
 
     // Verify success message is shown
     expect(await screen.findByText(/redirecionando para o whatsapp/i)).toBeInTheDocument();

@@ -25,6 +25,7 @@ This platform showcases Roberta Furucho's handmade doll creations and provides a
 - 🗃️ **JPA/Hibernate** - H2 (dev) / PostgreSQL (prod)
 - ✅ **Validation** - Jakarta Bean Validation
 - 🚦 **Rate Limiting** - Bucket4j protection
+- 🔐 **Authentication** - JWT + Spring Security
 - 📝 **REST API** - Order management endpoints
 
 ### DevOps
@@ -111,6 +112,7 @@ furucho/
 
 ## 📚 Documentation
 
+- [Security Guidelines](docs/SECURITY.md)
 - [Accessibility Guidelines](docs/ACCESSIBILITY.md)
 - [Coding Standards](docs/CODING_STANDARDS.md)
 - [Component Development](docs/COMPONENT_DEVELOPMENT.md)
