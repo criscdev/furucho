@@ -14,6 +14,7 @@
 #   ./scripts/check.sh frontend     # TS: typecheck + vitest
 #   ./scripts/check.sh arch         # architecture & hygiene
 #   ./scripts/check.sh a11y         # accessibility (axe via Playwright)
+#   ./scripts/check.sh board        # sync GitHub Project board status
 # =============================================================================
 set -euo pipefail
 
@@ -292,6 +293,56 @@ check_a11y() {
 }
 
 # =============================================================================
+# 7. BOARD — GitHub Project board health & status report
+# =============================================================================
+BOARD_PROJECT=6
+BOARD_OWNER=criscdev
+
+check_board() {
+  header "GitHub Project Board"
+
+  if ! command -v gh &>/dev/null; then
+    warn "gh CLI not installed — skipping board check"; return 0
+  fi
+  if ! gh auth status &>/dev/null 2>&1; then
+    warn "gh not authenticated — skipping board check"; return 0
+  fi
+
+  local items_json
+  items_json=$(gh project item-list "$BOARD_PROJECT" --owner "$BOARD_OWNER" --format json 2>&1) || {
+    warn "Failed to fetch board data"; return 0
+  }
+
+  local total todo in_progress done
+  total=$(echo "$items_json" | grep -o '"id":' | wc -l)
+  todo=$(echo "$items_json" | grep -o '"status":"Todo"' | wc -l)
+  in_progress=$(echo "$items_json" | grep -o '"status":"In Progress"' | wc -l)
+  done=$(echo "$items_json" | grep -o '"status":"Done"' | wc -l)
+
+  echo -e "  ${BOLD}Cards:${NC} $total total — ${GREEN}$done Done${NC} / ${YELLOW}$in_progress In Progress${NC} / $todo Todo"
+
+  # Show In Progress cards (active work)
+  if [ "$in_progress" -gt 0 ]; then
+    info "In Progress:"
+    echo "$items_json" | grep -oP '"status":"In Progress".*?"title":"[^"]*"' \
+      | grep -oP '"title":"[^"]*"' | sed 's/"title":"//;s/"//' \
+      | while read -r t; do echo -e "    ${YELLOW}→${NC} $t"; done
+  fi
+
+  # Warn if nothing is In Progress
+  if [ "$in_progress" -eq 0 ]; then
+    warn "No card In Progress — pick one before starting work"
+  fi
+
+  # Warn if too many In Progress (WIP limit)
+  if [ "$in_progress" -gt 3 ]; then
+    warn "$in_progress cards In Progress — consider WIP limit of 3"
+  fi
+
+  pass "Board sync verified"
+}
+
+# =============================================================================
 # MAIN — orchestration
 # =============================================================================
 main() {
@@ -306,6 +357,7 @@ main() {
     backend)   check_backend ;;
     frontend)  check_frontend ;;
     a11y)      check_a11y ;;
+    board)     check_board ;;
     quick)
       # Fast feedback loop: no e2e, no a11y
       check_conflicts
@@ -319,9 +371,10 @@ main() {
       check_backend
       check_frontend
       check_a11y
+      check_board
       ;;
     *)
-      echo "Usage: $0 [all|quick|status|conflicts|arch|backend|frontend|a11y]"
+      echo "Usage: $0 [all|quick|status|conflicts|arch|backend|frontend|a11y|board]"
       exit 1
       ;;
   esac
