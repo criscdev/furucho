@@ -15,6 +15,7 @@
 #   ./scripts/check.sh arch         # architecture & hygiene
 #   ./scripts/check.sh a11y         # accessibility (axe via Playwright)
 #   ./scripts/check.sh board        # sync GitHub Project board status
+#   ./scripts/check.sh review       # critical review: debt, coverage gaps, improvements
 # =============================================================================
 set -euo pipefail
 
@@ -128,7 +129,7 @@ check_arch() {
     local nextline
     nextline=$(sed -n "$((linenum+1))p" "$file" 2>/dev/null || true)
     if ! echo "$nextline" | grep -qE '^\s*(public\s+)?class\s'; then
-      ((inline_count++))
+      ((inline_count++)) || true
     fi
   done <<< "$(grep -rn '@SuppressWarnings("null")' --include='*.java' backend/src/ 2>/dev/null || true)"
   if [ "$inline_count" -eq 0 ]; then
@@ -194,7 +195,7 @@ check_arch() {
       [ "$classname" = "*" ] && continue
       # Check if the classname appears outside import lines
       if ! grep -q "$classname" <(grep -v '^import ' "$jfile") 2>/dev/null; then
-        ((unused_imports++))
+        ((unused_imports++)) || true
       fi
     done <<< "$imports"
   done < <(find backend/src/main -name '*.java' 2>/dev/null)
@@ -343,6 +344,124 @@ check_board() {
 }
 
 # =============================================================================
+# 8. REVIEW — critical self-assessment: tech debt, coverage, improvements
+# =============================================================================
+check_review() {
+  header "Critical Review"
+
+  # 8a. TODO/FIXME/HACK markers — pending technical debt
+  local debt_markers
+  debt_markers=$(grep -rn 'TODO\|FIXME\|HACK\|XXX\|WORKAROUND' \
+    --include='*.java' --include='*.tsx' --include='*.ts' \
+    --include='*.properties' \
+    --exclude-dir=node_modules --exclude-dir=target --exclude-dir=.git \
+    --exclude-dir=coverage --exclude-dir=playwright-report \
+    --exclude-dir=test-results \
+    . 2>/dev/null || true)
+  local debt_count=0
+  [ -n "$debt_markers" ] && debt_count=$(echo "$debt_markers" | wc -l)
+  if [ "$debt_count" -eq 0 ]; then
+    pass "No TODO/FIXME/HACK markers"
+  else
+    warn "$debt_count pending TODO/FIXME/HACK marker(s):"
+    echo "$debt_markers" | head -10
+    [ "$debt_count" -gt 10 ] && warn "... and $((debt_count - 10)) more"
+  fi
+
+  # 8b. Test coverage gaps — source files without corresponding tests
+  local missing_tests=0
+  local missing_list=""
+
+  # Backend Java
+  while IFS= read -r src_file; do
+    [ -z "$src_file" ] && continue
+    local bname
+    bname=$(basename "$src_file" .java)
+    # Skip types unlikely to have dedicated unit tests
+    echo "$bname" | grep -qiE 'Config$|Entity$|Dto$|Model$|Properties$|Application$|Exception$' && continue
+    if ! find backend/src/test -name "${bname}Test.java" 2>/dev/null | grep -q .; then
+      ((missing_tests++)) || true
+      [ "$missing_tests" -le 5 ] && missing_list+="    $src_file\n"
+    fi
+  done < <(find backend/src/main -name '*.java' 2>/dev/null)
+
+  # Frontend TSX components
+  while IFS= read -r src_file; do
+    [ -z "$src_file" ] && continue
+    local bname dir
+    bname=$(basename "$src_file" .tsx)
+    dir=$(dirname "$src_file")
+    if ! find "$dir" -maxdepth 1 \( -name "${bname}.test.tsx" -o -name "${bname}.test.ts" \) 2>/dev/null | grep -q .; then
+      if ! find src/test -name "${bname}*test*" 2>/dev/null | grep -q .; then
+        ((missing_tests++)) || true
+        [ "$missing_tests" -le 10 ] && missing_list+="    $src_file\n"
+      fi
+    fi
+  done < <(find app src/component -name '*.tsx' ! -name '*.test.*' 2>/dev/null)
+
+  if [ "$missing_tests" -eq 0 ]; then
+    pass "All source files have corresponding tests"
+  else
+    warn "$missing_tests source file(s) without corresponding tests:"
+    echo -e "$missing_list"
+  fi
+
+  # 8c. Large files — refactoring candidates (>250 LOC)
+  local large_files
+  large_files=$(find backend/src/main app src/component -type f \
+    \( -name '*.java' -o -name '*.tsx' -o -name '*.ts' \) \
+    -exec wc -l {} + 2>/dev/null \
+    | sort -rn | head -11 | grep -v ' total$' \
+    | awk '$1 > 250 {print}' || true)
+  if [ -z "$large_files" ]; then
+    pass "No oversized source files (>250 LOC)"
+  else
+    warn "Large files (>250 LOC) — consider splitting:"
+    echo "$large_files" | while read -r line; do echo "    $line"; done
+  fi
+
+  # 8d. Script self-check — usage header lists all gates
+  local header_entries
+  header_entries=$(grep -cE '^#\s+\./scripts/check.sh\s+\w' "$ROOT/scripts/check.sh" 2>/dev/null || echo 0)
+  if [ "$header_entries" -gt 0 ]; then
+    pass "check.sh: $header_entries gate(s) documented in usage header"
+  else
+    warn "check.sh: usage header may be out of sync with actual gates"
+  fi
+
+  # 8e. Docs freshness — source updated much later than docs
+  local newest_src newest_doc
+  newest_src=$(find backend/src app src/component -type f -printf '%T@\n' 2>/dev/null | sort -rn | head -1 || echo 0)
+  newest_doc=$(find docs -type f -name '*.md' -printf '%T@\n' 2>/dev/null | sort -rn | head -1 || echo 0)
+  if [ -n "$newest_src" ] && [ -n "$newest_doc" ]; then
+    local src_ts doc_ts diff_days
+    src_ts=${newest_src%%.*}
+    doc_ts=${newest_doc%%.*}
+    diff_days=$(( (src_ts - doc_ts) / 86400 ))
+    if [ "$diff_days" -gt 7 ]; then
+      warn "Docs may be stale — source updated ${diff_days} day(s) after latest doc change"
+    else
+      pass "Docs are up to date (within 7 days of source changes)"
+    fi
+  fi
+
+  # 8f. Duplicate dependencies (pom.xml)
+  if [ -f backend/pom.xml ]; then
+    local dup_deps
+    dup_deps=$(grep '<artifactId>' backend/pom.xml 2>/dev/null \
+      | sed 's/.*<artifactId>//' | sed 's/<\/artifactId>.*//' \
+      | sort | uniq -d || true)
+    if [ -z "$dup_deps" ]; then
+      pass "No duplicate Maven dependencies"
+    else
+      warn "Duplicate Maven dependencies: $dup_deps"
+    fi
+  fi
+
+  pass "Critical review complete — act on warnings above"
+}
+
+# =============================================================================
 # MAIN — orchestration
 # =============================================================================
 main() {
@@ -358,6 +477,7 @@ main() {
     frontend)  check_frontend ;;
     a11y)      check_a11y ;;
     board)     check_board ;;
+    review)    check_review ;;
     quick)
       # Fast feedback loop: no e2e, no a11y
       check_conflicts
@@ -372,9 +492,10 @@ main() {
       check_frontend
       check_a11y
       check_board
+      check_review
       ;;
     *)
-      echo "Usage: $0 [all|quick|status|conflicts|arch|backend|frontend|a11y|board]"
+      echo "Usage: $0 [all|quick|status|conflicts|arch|backend|frontend|a11y|board|review]"
       exit 1
       ;;
   esac
