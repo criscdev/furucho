@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Unit tests for OrderController.
  */
 @WebMvcTest(OrderController.class)
+// MockMvc fluent API triggers JDT null-analysis false positives in tests.
 @SuppressWarnings("null")
 class OrderControllerTest {
 

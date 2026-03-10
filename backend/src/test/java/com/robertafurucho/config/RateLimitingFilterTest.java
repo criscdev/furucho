@@ -42,6 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RateLimitingFilter")
+// Standalone MockMvc DSL triggers JDT null-analysis false positives.
+@SuppressWarnings("null")
 class RateLimitingFilterTest {
 
     private static final LocalDate FUTURE_DATE = LocalDate.now().plusMonths(6);
@@ -93,7 +95,7 @@ class RateLimitingFilterTest {
 
     @Test
     @DisplayName("first 5 POST requests are allowed (201)")
-    void firstFiveRequests_AreAllowed() throws Exception {
+        void firstFiveRequests_AreAllowed() throws Exception {
         stubServiceOk();
 
         for (int i = 0; i < RateLimitingFilter.CAPACITY; i++) {
@@ -106,7 +108,7 @@ class RateLimitingFilterTest {
 
     @Test
     @DisplayName("sixth POST request returns 429 with Retry-After header")
-    void sixthRequest_ReturnsTooManyRequests() throws Exception {
+        void sixthRequest_ReturnsTooManyRequests() throws Exception {
         stubServiceOk();
         String body = validBody();
 
@@ -139,7 +141,7 @@ class RateLimitingFilterTest {
 
     @Test
     @DisplayName("X-Forwarded-For header separates buckets per IP")
-    void xForwardedFor_SeparatesBucketsPerIp() throws Exception {
+        void xForwardedFor_SeparatesBucketsPerIp() throws Exception {
         stubServiceOk();
         String body = validBody();
 

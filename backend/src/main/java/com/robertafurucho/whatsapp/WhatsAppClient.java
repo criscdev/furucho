@@ -11,6 +11,7 @@ import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * HTTP client for sending messages via the WhatsApp Cloud API.
@@ -32,8 +33,12 @@ public class WhatsAppClient {
 
     public WhatsAppClient(WhatsAppConfig config) {
         this.config = config;
+        String baseUrl = Objects.requireNonNull(
+            config.getApi().getBaseUrl(),
+            "whatsapp.api.base-url must not be null"
+        );
         this.webClient = WebClient.builder()
-            .baseUrl(config.getApi().getBaseUrl())
+            .baseUrl(baseUrl)
             .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             .build();
     }
@@ -85,13 +90,20 @@ public class WhatsAppClient {
     }
 
     private void sendMessage(Map<String, Object> body) {
-        String phoneNumberId = config.getApi().getPhoneNumberId();
-        String accessToken = config.getApi().getAccessToken();
+        String phoneNumberId = Objects.requireNonNull(
+            config.getApi().getPhoneNumberId(),
+            "whatsapp.api.phone-number-id must not be null"
+        );
+        String accessToken = Objects.requireNonNull(
+            config.getApi().getAccessToken(),
+            "whatsapp.api.access-token must not be null"
+        );
+        Object payload = Objects.requireNonNull(body, "whatsapp payload must not be null");
 
         webClient.post()
             .uri("/{phoneNumberId}/messages", phoneNumberId)
             .header("Authorization", "Bearer " + accessToken)
-            .bodyValue(body)
+            .bodyValue(payload)
             .retrieve()
             .bodyToMono(String.class)
             .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))

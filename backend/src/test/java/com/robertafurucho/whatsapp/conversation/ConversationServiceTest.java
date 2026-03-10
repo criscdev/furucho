@@ -30,6 +30,8 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ConversationService")
+// Mockito argument captors/matchers trigger JDT null-analysis false positives.
+@SuppressWarnings("null")
 class ConversationServiceTest {
 
     private static final String WA_ID = "5511999991234";
@@ -86,7 +88,7 @@ class ConversationServiceTest {
 
         @Test
         @DisplayName("sends welcome message and advances to ASK_NAME")
-        void sendsGreeting() {
+            void sendsGreeting() {
             when(repository.findActiveByWaId(WA_ID)).thenReturn(Optional.empty());
             when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -376,7 +378,7 @@ class ConversationServiceTest {
 
         @Test
         @DisplayName("/status shows last completed order without creating orphan conversation")
-        void statusCommand() {
+            void statusCommand() {
             ConversationState completed = filledState();
             completed.setCurrentStep(ConversationStep.COMPLETED);
             completed.setCompletedAt(LocalDateTime.now());
@@ -392,7 +394,7 @@ class ConversationServiceTest {
 
         @Test
         @DisplayName("/ajuda shows help text without creating orphan conversation")
-        void helpCommand() {
+            void helpCommand() {
             service.processMessage(WA_ID, MSG_ID, "text", "/ajuda", null);
 
             verify(client).sendText(eq(WA_ID), contains("Comandos disponíveis"));
@@ -409,7 +411,7 @@ class ConversationServiceTest {
 
         @Test
         @DisplayName("duplicate message ID is ignored")
-        void duplicateMessageSkipped() {
+            void duplicateMessageSkipped() {
             ConversationState state = stateAt(ConversationStep.ASK_NAME);
             state.setLastMessageId(MSG_ID);
             when(repository.findActiveByWaId(WA_ID)).thenReturn(Optional.of(state));

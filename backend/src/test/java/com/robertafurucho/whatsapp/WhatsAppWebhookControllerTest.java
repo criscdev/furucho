@@ -19,6 +19,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(WhatsAppWebhookController.class)
 @DisplayName("WhatsAppWebhookController")
+// MockMvc payload assertions trigger JDT null-analysis false positives.
+@SuppressWarnings("null")
 class WhatsAppWebhookControllerTest {
 
     @Autowired
@@ -118,7 +120,7 @@ class WhatsAppWebhookControllerTest {
 
         @Test
         @DisplayName("processes valid signed payload and returns 200")
-        void validPayload() throws Exception {
+            void validPayload() throws Exception {
             when(config.isEnabled()).thenReturn(true);
             when(signatureValidator.isValid(any(byte[].class), anyString())).thenReturn(true);
 
@@ -135,7 +137,7 @@ class WhatsAppWebhookControllerTest {
 
         @Test
         @DisplayName("rejects invalid signature with 401")
-        void invalidSignature() throws Exception {
+            void invalidSignature() throws Exception {
             when(config.isEnabled()).thenReturn(true);
             when(signatureValidator.isValid(any(byte[].class), anyString())).thenReturn(false);
 
@@ -151,7 +153,7 @@ class WhatsAppWebhookControllerTest {
 
         @Test
         @DisplayName("returns 404 when feature is disabled")
-        void disabledFeature() throws Exception {
+            void disabledFeature() throws Exception {
             when(config.isEnabled()).thenReturn(false);
 
             mockMvc.perform(post("/api/webhooks/whatsapp")
@@ -163,7 +165,7 @@ class WhatsAppWebhookControllerTest {
 
         @Test
         @DisplayName("skips non-message webhook fields (e.g. statuses)")
-        void skipsStatusUpdates() throws Exception {
+            void skipsStatusUpdates() throws Exception {
             when(config.isEnabled()).thenReturn(true);
             when(signatureValidator.isValid(any(byte[].class), anyString())).thenReturn(true);
 

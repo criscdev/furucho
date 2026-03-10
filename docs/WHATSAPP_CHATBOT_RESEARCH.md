@@ -1,5 +1,7 @@
 # WhatsApp Chatbot Research — Furucho Order Bot
 
+
+
 > **Date:** March 3, 2026  
 > **Context:** Small artisanal biscuit doll business (Roberta Furucho) in Brazil  
 > **Goal:** Replace web form → WhatsApp link with a conversational WhatsApp bot that IS the form
@@ -324,7 +326,7 @@ Major Brazilian brands use Blip: Coca-Cola Brazil, Ponto Frio, and others (80M+ 
 ### Integration with Custom Backend
 
 Blip supports:
-cd
+
 - **HTTP Actions** within flows — call your Spring Boot API at any step
 - **Webhooks** — Blip can forward events to your backend
 - **Blip SDK** — programmatic access to conversations

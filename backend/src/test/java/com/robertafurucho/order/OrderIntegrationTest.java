@@ -34,6 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("Order Integration (POST→GET→PATCH→GET)")
+// MockMvc + Hamcrest matcher chain triggers JDT null-analysis false positives.
+@SuppressWarnings("null")
 class OrderIntegrationTest {
 
     @Autowired
@@ -69,7 +71,7 @@ class OrderIntegrationTest {
 
     @Test
     @DisplayName("full lifecycle: create → get by id → update status → verify update")
-    void fullLifecycle_CreateGetPatchGet() throws Exception {
+        void fullLifecycle_CreateGetPatchGet() throws Exception {
         // 1. POST /api/orders → 201 Created
         String createResponse = mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +110,7 @@ class OrderIntegrationTest {
 
     @Test
     @DisplayName("GET /api/orders returns all orders, newest first")
-    void getAllOrders_ReturnsListNewestFirst() throws Exception {
+        void getAllOrders_ReturnsListNewestFirst() throws Exception {
         // Create two orders
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -151,7 +153,7 @@ class OrderIntegrationTest {
 
     @Test
     @DisplayName("POST /api/orders with invalid body returns 400 with field errors")
-    void createOrder_InvalidBody_Returns400() throws Exception {
+        void createOrder_InvalidBody_Returns400() throws Exception {
         String invalidJson = """
             {
                 "name": "",
@@ -176,7 +178,7 @@ class OrderIntegrationTest {
 
     @Test
     @DisplayName("PATCH with invalid status returns 400")
-    void updateStatus_InvalidStatus_Returns400() throws Exception {
+        void updateStatus_InvalidStatus_Returns400() throws Exception {
         // Create an order first
         String response = mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -193,7 +195,7 @@ class OrderIntegrationTest {
 
     @Test
     @DisplayName("data persists across requests (H2 real database)")
-    void dataPersists_AcrossRequests() throws Exception {
+        void dataPersists_AcrossRequests() throws Exception {
         // Create order
         mockMvc.perform(post("/api/orders")
                 .contentType(MediaType.APPLICATION_JSON)

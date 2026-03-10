@@ -22,6 +22,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderService")
+// Mockito matchers/captors trigger JDT null-analysis false positives.
+@SuppressWarnings("null")
 class OrderServiceTest {
 
     private static final LocalDate FUTURE_DATE = LocalDate.now().plusMonths(6);
