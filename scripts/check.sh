@@ -314,10 +314,10 @@ check_board() {
   }
 
   local total todo in_progress done
-  total=$(echo "$items_json" | grep -o '"id":' | wc -l)
-  todo=$(echo "$items_json" | grep -o '"status":"Todo"' | wc -l)
-  in_progress=$(echo "$items_json" | grep -o '"status":"In Progress"' | wc -l)
-  done=$(echo "$items_json" | grep -o '"status":"Done"' | wc -l)
+  total=$( (echo "$items_json" | grep -o '"id":' || true) | wc -l)
+  todo=$( (echo "$items_json" | grep -o '"status":"Todo"' || true) | wc -l)
+  in_progress=$( (echo "$items_json" | grep -o '"status":"In Progress"' || true) | wc -l)
+  done=$( (echo "$items_json" | grep -o '"status":"Done"' || true) | wc -l)
 
   echo -e "  ${BOLD}Cards:${NC} $total total — ${GREEN}$done Done${NC} / ${YELLOW}$in_progress In Progress${NC} / $todo Todo"
 
