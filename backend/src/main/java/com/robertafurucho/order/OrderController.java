@@ -1,42 +1,24 @@
 package com.robertafurucho.order;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for order management.
- * 
- * Provides endpoints for creating and retrieving doll orders.
- * Includes rate limiting to prevent abuse.
+ *
+ * <p>Provides endpoints for creating and retrieving doll orders.
+ * Rate limiting is handled upstream by
+ * {@link com.robertafurucho.config.RateLimitingFilter}.
  */
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class OrderController {
 
-    // Rate limiting configuration
-    private static final int RATE_LIMIT_CACHE_MAX_SIZE = 10_000;
-    private static final Duration RATE_LIMIT_CACHE_TTL = Duration.ofMinutes(10);
-
     private final OrderService orderService;
-    
-    // Rate limiting: Cache of IP -> Bucket with automatic expiration
-    // Entries expire after inactivity to prevent memory leaks
-    private final Cache<String, Bucket> buckets = Caffeine.newBuilder()
-        .expireAfterAccess(RATE_LIMIT_CACHE_TTL)
-        .maximumSize(RATE_LIMIT_CACHE_MAX_SIZE)
-        .build();
 
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
@@ -44,34 +26,21 @@ public class OrderController {
 
     /**
      * Creates a new order.
-     * 
-     * @param request The order creation request
-     * @param httpRequest HTTP request for rate limiting
-     * @return Created order or rate limit error
+     *
+     * @param request the validated order creation request
+     * @return 201 Created with the saved order
      */
     @PostMapping
-    public ResponseEntity<?> createOrder(
-            @Valid @RequestBody CreateOrderRequest request,
-            HttpServletRequest httpRequest) {
-        
-        // Rate limiting check
-        Bucket bucket = resolveBucket(getClientIp(httpRequest));
-        if (!bucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                .body(Map.of(
-                    "error", "Muitas requisições",
-                    "message", "Por favor, aguarde antes de enviar outro pedido."
-                ));
-        }
-
+    public ResponseEntity<OrderResponse> createOrder(
+            @Valid @RequestBody CreateOrderRequest request) {
         OrderResponse response = orderService.createOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
      * Gets all orders (admin endpoint).
-     * 
-     * @return List of all orders
+     *
+     * @return 200 OK with list of all orders, newest first
      */
     @GetMapping
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
@@ -80,9 +49,9 @@ public class OrderController {
 
     /**
      * Gets an order by ID.
-     * 
-     * @param id The order ID
-     * @return The order or 404
+     *
+     * @param id the order ID
+     * @return 200 OK with the order, or 404 if not found
      */
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> getOrderById(@PathVariable Long id) {
@@ -91,41 +60,15 @@ public class OrderController {
 
     /**
      * Updates an order's status.
-     * 
-     * @param id The order ID
-     * @param status The new status
-     * @return Updated order
+     *
+     * @param id     the order ID
+     * @param status the new status
+     * @return 200 OK with the updated order
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderResponse> updateOrderStatus(
             @PathVariable Long id,
             @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
-    }
-
-    /**
-     * Creates or retrieves a rate limit bucket for the given key.
-     * Limit: 5 requests per minute per IP.
-     * Buckets are cached with automatic expiration after 10 minutes of inactivity.
-     */
-    private Bucket resolveBucket(String key) {
-        return buckets.get(key, k -> {
-            Bandwidth limit = Bandwidth.builder()
-                .capacity(5)
-                .refillGreedy(5, Duration.ofMinutes(1))
-                .build();
-            return Bucket.builder().addLimit(limit).build();
-        });
-    }
-
-    /**
-     * Extracts client IP from request, handling proxies.
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isEmpty()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

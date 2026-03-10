@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
@@ -8,6 +8,9 @@ import { orderFactory } from '../../test/factories/orderFactory';
 expect.extend(toHaveNoViolations);
 
 describe('OrderForm', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it('renders the form with all labeled input fields', () => {
     render(<OrderForm />);
 
@@ -29,6 +32,16 @@ describe('OrderForm', () => {
     expect(screen.getByLabelText(/nome completo/i)).toHaveAttribute('aria-required', 'true');
     expect(screen.getByLabelText(/^email/i)).toHaveAttribute('aria-required', 'true');
     expect(screen.getByLabelText(/telefone/i)).toHaveAttribute('aria-required', 'true');
+  });
+
+  it('has autocomplete attributes for personal data fields (WCAG 1.3.5)', () => {
+    render(<OrderForm />);
+
+    expect(screen.getByLabelText(/nome completo/i)).toHaveAttribute('autocomplete', 'name');
+    expect(screen.getByLabelText(/^email/i)).toHaveAttribute('autocomplete', 'email');
+    expect(screen.getByLabelText(/telefone/i)).toHaveAttribute('autocomplete', 'tel');
+    expect(screen.getByLabelText(/endereço completo/i)).toHaveAttribute('autocomplete', 'street-address');
+    expect(screen.getByLabelText(/cep/i)).toHaveAttribute('autocomplete', 'postal-code');
   });
 
   it('shows validation errors for empty required fields on submit', async () => {
@@ -65,7 +78,8 @@ describe('OrderForm', () => {
 
   it('opens WhatsApp with formatted message on valid submission', async () => {
     const user = userEvent.setup();
-    const mockOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const fakeWindow = {} as Window;
+    const mockOpen = vi.spyOn(window, 'open').mockReturnValue(fakeWindow);
     const mockCallback = vi.fn();
 
     render(<OrderForm onSubmitSuccess={mockCallback} />);
@@ -99,7 +113,34 @@ describe('OrderForm', () => {
     });
     expect(await screen.findByText(/redirecionando para o whatsapp/i)).toBeInTheDocument();
 
-    mockOpen.mockRestore();
+    // Form should be reset after successful submission
+    expect(screen.getByLabelText(/nome completo/i)).toHaveValue('');
+    expect(screen.getByLabelText(/^email/i)).toHaveValue('');
+  });
+
+  it('shows error when popup is blocked (window.open returns null)', async () => {
+    const user = userEvent.setup();
+    const mockOpen = vi.spyOn(window, 'open').mockReturnValue(null);
+    const mockCallback = vi.fn();
+
+    render(<OrderForm onSubmitSuccess={mockCallback} />);
+    const orderData = orderFactory();
+
+    await user.type(screen.getByLabelText(/nome completo/i), orderData.name);
+    await user.type(screen.getByLabelText(/^email/i), orderData.email);
+    await user.type(screen.getByLabelText(/telefone/i), orderData.phone);
+    await user.type(screen.getByLabelText(/endereço completo/i), orderData.address);
+    await user.type(screen.getByLabelText(/cep/i), orderData.postalCode);
+    await user.type(screen.getByLabelText(/tipo de boneca desejada/i), orderData.orderScope);
+    await user.type(screen.getByLabelText(/detalhes da boneca/i), orderData.orderScopeDetail);
+    await user.type(screen.getByLabelText(/data desejada para receber/i), orderData.receiveDate);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    // Popup blocked → error shown, callback NOT called
+    const errorAlert = await screen.findByRole('alert');
+    expect(errorAlert).toHaveTextContent(/erro ao processar/i);
+    expect(mockCallback).not.toHaveBeenCalled();
   });
 
   it('has accessible error messages linked via aria-describedby', async () => {
@@ -137,5 +178,41 @@ describe('OrderForm', () => {
     const results = await axe(container);
     
     expect(results).toHaveNoViolations();
+  });
+
+  it('focuses the first invalid field on empty submit', async () => {
+    const user = userEvent.setup();
+    render(<OrderForm />);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/nome completo/i)).toHaveFocus();
+    });
+  });
+
+  it('shows error alert when window.open throws', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, 'open').mockImplementation(() => {
+      throw new Error('Popup blocked');
+    });
+
+    render(<OrderForm />);
+
+    const orderData = orderFactory();
+
+    await user.type(screen.getByLabelText(/nome completo/i), orderData.name);
+    await user.type(screen.getByLabelText(/^email/i), orderData.email);
+    await user.type(screen.getByLabelText(/telefone/i), orderData.phone);
+    await user.type(screen.getByLabelText(/endereço completo/i), orderData.address);
+    await user.type(screen.getByLabelText(/cep/i), orderData.postalCode);
+    await user.type(screen.getByLabelText(/tipo de boneca desejada/i), orderData.orderScope);
+    await user.type(screen.getByLabelText(/detalhes da boneca/i), orderData.orderScopeDetail);
+    await user.type(screen.getByLabelText(/data desejada para receber/i), orderData.receiveDate);
+
+    await user.click(screen.getByRole('button', { name: /enviar pelo whatsapp/i }));
+
+    const errorAlert = await screen.findByRole('alert');
+    expect(errorAlert).toHaveTextContent(/erro ao processar/i);
   });
 });

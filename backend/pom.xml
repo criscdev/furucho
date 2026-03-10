@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.1</version>
+        <version>3.5.11</version>
         <relativePath/>
     </parent>
 
@@ -18,7 +18,7 @@
     <description>API Backend for Roberta Furucho Handmade Dolls</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -43,10 +43,11 @@
             <scope>runtime</scope>
         </dependency>
         
-        <!-- PostgreSQL (production) -->
+        <!-- PostgreSQL (production) - pinned to fix CVE-2025-49146 (HIGH) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.5</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -57,18 +58,20 @@
             <version>8.10.1</version>
         </dependency>
 
-        <!-- Caffeine Cache for rate limiting bucket storage with TTL -->
+        <!-- Spring WebFlux (for WebClient — WhatsApp Cloud API HTTP client) -->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>3.1.8</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
 
-        <!-- Lombok for reducing boilerplate -->
+        <!-- Flyway Database Migrations -->
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <!-- Testing -->
@@ -84,14 +87,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

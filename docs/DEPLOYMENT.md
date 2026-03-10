@@ -72,7 +72,7 @@ az webapp create \
   --name furucho-api \
   --resource-group furucho-rg \
   --plan furucho-plan \
-  --runtime "JAVA:17-java17"
+  --runtime "JAVA:21-java21"
 
 # Create PostgreSQL Server (Basic tier)
 az postgres flexible-server create \

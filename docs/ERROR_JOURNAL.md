@@ -144,3 +144,77 @@ Steps taken to resolve.
 **Lesson learned:**
 Key takeaways to prevent recurrence.
 ```
+
+---
+
+## 2026-03-03: JPA Optional Return Type with ORDER BY Returns Multiple Rows
+
+**What went wrong:**
+`ConversationRepository.findActiveByWaId()` and `findLastCompletedByWaId()` used JPQL queries with `ORDER BY` returning `Optional<ConversationState>`. Spring Data JPA internally calls `getSingleResult()` for `Optional<T>` return types. When multiple rows match (returning customers with multiple completed conversations, or race condition creating duplicate active rows), it throws `IncorrectResultSizeDataAccessException`.
+
+**The error:**
+
+```text
+org.springframework.dao.IncorrectResultSizeDataAccessException:
+  Query did not return a unique result: 3 results were returned
+```
+
+**How I fixed it:**
+Changed both queries from JPQL to native SQL with `LIMIT 1`:
+
+```java
+@Query(value = "SELECT * FROM conversation_states WHERE wa_id = :waId " +
+       "AND current_step = 'COMPLETED' ORDER BY completed_at DESC LIMIT 1",
+       nativeQuery = true)
+Optional<ConversationState> findLastCompletedByWaId(@Param("waId") String waId);
+```
+
+**Lesson learned:**
+Never use `Optional<T>` as a return type for JPA queries with `ORDER BY` that can match multiple rows. Either use native query with `LIMIT 1`, return `List<T>` and take first, or use Spring Data's `findFirstBy...OrderBy...` derived query method naming.
+
+---
+
+## 2026-03-03: WebFlux subscribe() Without Error Consumer
+
+**What went wrong:**
+`WhatsAppClient.sendMessage()` used `.subscribe()` with no arguments after a Reactor chain. The `.doOnError()` operator is a side-effect — it logs but doesn't consume the error. When the HTTP call fails, the error propagates to `subscribe()` which has no error consumer, causing `reactor.core.Exceptions$ErrorCallbackNotImplemented` on the async reactor thread.
+
+**The error:**
+
+```text
+reactor.core.Exceptions$ErrorCallbackNotImplemented:
+  org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+```
+
+**How I fixed it:**
+Added error consumer lambda to subscribe:
+
+```java
+.subscribe(
+    resp -> {},
+    err -> log.error("WhatsApp API call failed: {}", err.getMessage())
+);
+```
+
+**Lesson learned:**
+Always provide an error consumer when calling `.subscribe()` on a Mono/Flux. The `doOnError()` operator is for side-effects only — it does NOT consume the error signal. Without an error consumer, errors crash the reactor thread silently. Consider using `.onErrorResume()` for more sophisticated error handling.
+
+---
+
+## 2026-03-03: Mockito Strictness.LENIENT Hides False-Positive Tests
+
+**What went wrong:**
+`ConversationServiceTest` used `@MockitoSettings(strictness = Strictness.LENIENT)` which suppressed all warnings about unnecessary stubbings. This hid several problems: dead `stubSave()` calls, duplicate when/thenReturn setups, and the `confirmCreatesOrder` test using `any()` matcher — which meant the test would pass even if all order fields were mapped incorrectly.
+
+**The error:**
+
+No visible error — that's the problem. Tests passed with false confidence.
+
+**How I fixed it:**
+Removed `Strictness.LENIENT`, then fixed each strict-stubbing violation exposed:
+- Removed dead `stateAt()` call in `sendsGreeting`
+- Removed duplicate `stubSave()` calls
+- Replaced `any(CreateOrderRequest.class)` with `ArgumentCaptor` to verify actual field values
+
+**Lesson learned:**
+Never use `Strictness.LENIENT` at the class level as a convenience shortcut. It defeats Mockito's built-in safety net against stale test code. If a specific test needs LENIENT, annotate just that test method with `@MockitoSettings`. Use `ArgumentCaptor` instead of `any()` when the argument values matter — which is almost always the case for data-mapping tests.

@@ -15,7 +15,9 @@
  * <OrderForm whatsappNumber="5511999999999" />
  */
 
-import { useState, type FormEvent, type ChangeEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { useOrderFormValidation } from "./useOrderFormValidation";
+import { formatWhatsAppMessage } from "./formatWhatsAppMessage";
 
 export interface OrderFormData {
   name: string;
@@ -35,154 +37,41 @@ export interface OrderFormProps {
   onSubmitSuccess?: (data: OrderFormData) => void;
 }
 
-interface FormErrors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  postalCode?: string;
-  orderScope?: string;
-  orderScopeDetail?: string;
-  receiveDate?: string;
-}
-
-const initialFormData: OrderFormData = {
-  name: "",
-  email: "",
-  phone: "",
-  address: "",
-  postalCode: "",
-  orderScope: "",
-  orderScopeDetail: "",
-  receiveDate: "",
-};
-
 export function OrderForm({ 
   whatsappNumber = "5511999999999",
   onSubmitSuccess 
 }: OrderFormProps) {
-  const [formData, setFormData] = useState<OrderFormData>(initialFormData);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const { formData, errors, handleChange, validate, reset } = useOrderFormValidation();
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const validateForm = (): FormErrors => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = "Nome é obrigatório";
-    } else if (formData.name.length > 200) {
-      newErrors.name = "Nome deve ter no máximo 200 caracteres";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email é obrigatório";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email inválido";
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Telefone é obrigatório";
-    } else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ""))) {
-      newErrors.phone = "Telefone deve ter 10 ou 11 dígitos";
-    }
-
-    if (!formData.address.trim()) {
-      newErrors.address = "Endereço é obrigatório";
-    }
-
-    if (!formData.postalCode.trim()) {
-      newErrors.postalCode = "CEP é obrigatório";
-    } else if (!/^\d{5}-?\d{3}$/.test(formData.postalCode)) {
-      newErrors.postalCode = "CEP inválido (formato: 00000-000)";
-    }
-
-    if (!formData.orderScope.trim()) {
-      newErrors.orderScope = "Resumo do pedido é obrigatório";
-    }
-
-    if (!formData.orderScopeDetail.trim()) {
-      newErrors.orderScopeDetail = "Detalhes do pedido são obrigatórios";
-    }
-
-    if (!formData.receiveDate.trim()) {
-      newErrors.receiveDate = "Data de entrega é obrigatória";
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(formData.receiveDate)) {
-      newErrors.receiveDate = "Data inválida (formato: AAAA-MM-DD)";
-    } else {
-      // Validate that the date is in the future
-      const selectedDate = new Date(formData.receiveDate);
-      selectedDate.setHours(0, 0, 0, 0);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (selectedDate < today) {
-        newErrors.receiveDate = "Data deve ser no futuro";
-      }
-    }
-
-    setErrors(newErrors);
-    return newErrors;
-  };
-
-  const formatWhatsAppMessage = (): string => {
-    // Format date from ISO (YYYY-MM-DD) to Brazilian format (DD/MM/YYYY) for display
-    const formatDate = (isoDate: string): string => {
-      const parts = isoDate.split('-');
-      if (parts.length !== 3) {
-        return isoDate; // Return as-is if format is unexpected
-      }
-      const [year, month, day] = parts;
-      return `${day}/${month}/${year}`;
-    };
-
-    return encodeURIComponent(
-      `🧸 *Nova Encomenda de Boneca*\n\n` +
-      `*Nome:* ${formData.name}\n` +
-      `*Email:* ${formData.email}\n` +
-      `*Telefone:* ${formData.phone}\n` +
-      `*Endereço:* ${formData.address}\n` +
-      `*CEP:* ${formData.postalCode}\n\n` +
-      `*Resumo:* ${formData.orderScope}\n` +
-      `*Detalhes:* ${formData.orderScopeDetail}\n\n` +
-      `*Data desejada:* ${formatDate(formData.receiveDate)}`
-    );
-  };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitStatus("idle");
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      // Focus first error field
-      const firstErrorField = Object.keys(validationErrors)[0];
-      if (firstErrorField) {
-        const element = document.getElementById(firstErrorField);
-        element?.focus();
-      }
+    const formErrors = validate();
+    const errorKeys = Object.keys(formErrors);
+    if (errorKeys.length > 0) {
+      document.getElementById(errorKeys[0])?.focus();
       return;
     }
 
     try {
-      // Normalize data before sending to backend to match backend validation
-      const normalizedData = {
+      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage(formData)}`;
+      const win = window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+      if (!win) {
+        // Popup was blocked — treat as error so user is informed
+        setSubmitStatus("error");
+        return;
+      }
+
+      setSubmitStatus("success");
+      onSubmitSuccess?.({
         ...formData,
         phone: formData.phone.replace(/\D/g, ""),
-        postalCode: formData.postalCode.replace(/-/g, "")
-      };
-
-      const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${formatWhatsAppMessage()}`;
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-      setSubmitStatus("success");
-      onSubmitSuccess?.(normalizedData);
+        postalCode: formData.postalCode.replace(/-/g, ""),
+      });
+      reset();
     } catch {
       setSubmitStatus("error");
     }
@@ -244,6 +133,7 @@ export function OrderForm({
                 value={formData.name}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="name"
                 aria-required="true"
                 aria-invalid={!!errors.name}
                 aria-describedby={errors.name ? "name-error" : undefined}
@@ -268,6 +158,7 @@ export function OrderForm({
                 value={formData.email}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="email"
                 aria-required="true"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? "email-error" : undefined}
@@ -292,6 +183,7 @@ export function OrderForm({
                 value={formData.phone}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="tel"
                 aria-required="true"
                 aria-invalid={!!errors.phone}
                 aria-describedby={errors.phone ? "phone-error" : undefined}
@@ -317,6 +209,7 @@ export function OrderForm({
                 value={formData.address}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="street-address"
                 aria-required="true"
                 aria-invalid={!!errors.address}
                 aria-describedby={errors.address ? "address-error" : undefined}
@@ -341,6 +234,7 @@ export function OrderForm({
                 value={formData.postalCode}
                 onChange={handleChange}
                 className="form-input"
+                autoComplete="postal-code"
                 aria-required="true"
                 aria-invalid={!!errors.postalCode}
                 aria-describedby={errors.postalCode ? "postalCode-error" : undefined}
@@ -369,7 +263,7 @@ export function OrderForm({
                 aria-required="true"
                 aria-invalid={!!errors.orderScope}
                 aria-describedby={errors.orderScope ? "orderScope-error" : undefined}
-                placeholder="Ex: Boneca de pano tradicional, Amigurumi..."
+                placeholder="Ex: Boneca bailarina, Noivinha, Personagem..."
                 maxLength={100}
               />
               {errors.orderScope && (
@@ -409,7 +303,7 @@ export function OrderForm({
                 Data desejada para receber <span aria-hidden="true">*</span>
               </label>
               <input
-                type="date"
+                type="text"
                 id="receiveDate"
                 name="receiveDate"
                 value={formData.receiveDate}
@@ -417,8 +311,13 @@ export function OrderForm({
                 className="form-input"
                 aria-required="true"
                 aria-invalid={!!errors.receiveDate}
-                aria-describedby={errors.receiveDate ? "receiveDate-error" : undefined}
+                aria-describedby={`receiveDate-hint${errors.receiveDate ? ' receiveDate-error' : ''}`}
+                placeholder="DD/MM/AAAA"
+                maxLength={10}
               />
+              <span id="receiveDate-hint" className="text-sm" style={{ color: 'var(--color-text-light)' }}>
+                Formato: DD/MM/AAAA (ex: 25/12/2026)
+              </span>
               {errors.receiveDate && (
                 <span id="receiveDate-error" className="form-error" role="alert">
                   {errors.receiveDate}

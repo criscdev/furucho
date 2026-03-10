@@ -25,9 +25,9 @@
   --color-text-light: #6B6B6B;
   --color-text-heading: #3A3A3A;
 
-  /* Focus & Interactive (3:1+ contrast on cream) */
-  --color-focus: #9D6BA8;
-  --color-focus-ring: 0 0 0 3px rgba(157, 107, 168, 0.5);
+  /* Focus & Interactive (WCAG AA 4.5:1+ on cream & under white) */
+  --color-focus: #7B508C;
+  --color-focus-ring: 0 0 0 3px rgba(123, 80, 140, 0.5);
 
   /* Status */
   --color-success: #6BBF7A;

@@ -38,7 +38,7 @@ export function Header({
           {/* Brand */}
           <a 
             href="/" 
-            className="text-xl font-bold hover:opacity-80 transition-opacity"
+            className="inline-flex items-center min-h-[44px] text-xl font-bold hover:opacity-80 transition-opacity"
             style={{ color: 'var(--color-text-heading)' }}
           >
             Roberta Furucho
@@ -46,11 +46,11 @@ export function Header({
 
           {/* Navigation */}
           <nav aria-label="Navegação principal">
-            <ul className="flex items-center gap-6">
+            <ul className="flex items-center gap-4 sm:gap-6">
               <li>
                 <a 
                   href="/"
-                  className="font-medium hover:opacity-80 transition-opacity"
+                  className="inline-flex items-center min-h-[44px] min-w-[44px] justify-center font-medium hover:opacity-80 transition-opacity"
                   style={{ color: 'var(--color-text)' }}
                 >
                   Início
@@ -59,7 +59,7 @@ export function Header({
               <li>
                 <a 
                   href="#order-form"
-                  className="font-medium hover:opacity-80 transition-opacity"
+                  className="inline-flex items-center min-h-[44px] min-w-[44px] justify-center font-medium hover:opacity-80 transition-opacity"
                   style={{ color: 'var(--color-text)' }}
                 >
                   Encomendas
@@ -70,13 +70,13 @@ export function Header({
                   href={instagramUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-medium hover:opacity-80 transition-opacity"
+                  className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] gap-1 font-medium hover:opacity-80 transition-opacity"
                   style={{ color: 'var(--color-text)' }}
                   aria-label="Instagram de Roberta Furucho (abre em nova aba)"
                 >
                   <svg 
                     aria-hidden="true" 
-                    className="w-5 h-5" 
+                    className="w-6 h-6" 
                     fill="currentColor" 
                     viewBox="0 0 24 24"
                   >

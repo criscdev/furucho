@@ -14,6 +14,8 @@
  * <Gallery items={dollPhotos} />
  */
 
+import { useId } from 'react';
+
 export interface GalleryItem {
   /** Unique identifier */
   id: string;
@@ -37,37 +39,37 @@ const defaultItems: GalleryItem[] = [
   {
     id: "1",
     src: "https://placehold.co/400x400/F4B8C5/4A4A4A?text=Boneca+1",
-    alt: "Boneca de pano tradicional com vestido rosa e cabelos castanhos",
-    title: "Boneca Tradicional",
+    alt: "Boneca de biscuit clássica com vestido rosa e cabelos castanhos",
+    title: "Boneca Clássica",
   },
   {
     id: "2",
     src: "https://placehold.co/400x400/D8D0E8/4A4A4A?text=Boneca+2",
-    alt: "Boneca amigurumi de crochê em tons de lavanda",
-    title: "Amigurumi Lavanda",
+    alt: "Boneca de biscuit bailarina em tons de lavanda",
+    title: "Bailarina Lavanda",
   },
   {
     id: "3",
     src: "https://placehold.co/400x400/B8E0C8/4A4A4A?text=Boneca+3",
-    alt: "Boneca de pano com roupa verde menta e detalhes florais",
+    alt: "Boneca de biscuit com roupa verde menta e detalhes florais",
     title: "Boneca Floral",
   },
   {
     id: "4",
     src: "https://placehold.co/400x400/FFE4D6/4A4A4A?text=Boneca+4",
-    alt: "Boneca artesanal com vestido de festa em tons pastéis",
+    alt: "Boneca de biscuit com vestido de festa em tons pastéis",
     title: "Boneca Festa",
   },
   {
     id: "5",
     src: "https://placehold.co/400x400/F4B8C5/4A4A4A?text=Boneca+5",
-    alt: "Conjunto de mini bonecas decorativas em diferentes cores",
+    alt: "Conjunto de mini bonecas de biscuit decorativas em diferentes cores",
     title: "Mini Bonecas",
   },
   {
     id: "6",
     src: "https://placehold.co/400x400/D8D0E8/4A4A4A?text=Boneca+6",
-    alt: "Boneca personalizada com características únicas",
+    alt: "Boneca de biscuit personalizada com características únicas",
     title: "Boneca Personalizada",
   },
 ];
@@ -76,6 +78,8 @@ export function Gallery({
   items = defaultItems, 
   heading = "Galeria de Trabalhos" 
 }: GalleryProps) {
+  const headingId = useId();
+
   if (items.length === 0) {
     return null;
   }
@@ -83,10 +87,10 @@ export function Gallery({
   return (
     <section 
       className="max-w-6xl mx-auto px-4 py-12"
-      aria-labelledby="gallery-heading"
+      aria-labelledby={headingId}
     >
       <h2 
-        id="gallery-heading"
+        id={headingId}
         className="text-2xl font-bold mb-8 text-center"
         style={{ color: 'var(--color-text-heading)' }}
       >

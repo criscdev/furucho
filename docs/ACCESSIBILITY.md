@@ -1,6 +1,20 @@
 # Accessibility (WCAG 2.2 AA)
 
 Guidelines for building accessible components in Furucho.
+Compliant with **WCAG 2.2 Level AA** (W3C Recommendation, October 2023).
+
+## WCAG 2.2 New Criteria Coverage
+
+| SC     | Name                                 | Level | Status                                          |
+| ------ | ------------------------------------ | ----- | ----------------------------------------------- |
+| 2.4.11 | Focus Not Obscured (Minimum)         | AA    | ✅ No sticky overlays or modals that hide focus |
+| 2.5.7  | Dragging Movements                   | AA    | ✅ N/A — no drag-and-drop UI                    |
+| 2.5.8  | Target Size (Minimum)                | AA    | ✅ All interactive targets ≥ 44×44 via min-h/w     |
+| 3.2.6  | Consistent Help                      | A     | ✅ N/A — single-page app                        |
+| 3.3.7  | Redundant Entry                      | A     | ✅ N/A — single-step form                       |
+| 3.3.8  | Accessible Authentication (Minimum)  | AA    | ✅ N/A — no authentication                      |
+
+**Note:** SC 4.1.1 Parsing was removed in WCAG 2.2 (obsolete).
 
 ## Target Users (Reality Context)
 
@@ -48,8 +62,18 @@ Furucho is a custom doll ordering platform for Roberta's handmade doll business.
 - Links to `#main` landmark
 - Visible on focus
 
+## Target Size (WCAG 2.5.8)
+
+- All interactive elements must be ≥ 24×24 CSS px (we target 44×44 for touch)
+- Nav links use `min-h-[44px] min-w-[44px]` with `inline-flex items-center`
+- Buttons use generous padding (`py-3` = 12px each side)
+- Icons inside links sized ≥ 24×24 (`w-6 h-6`)
+- Inline links within sentences are exempt per WCAG 2.5.8 inline exception
+
 ## Testing
 
 - Manual: keyboard traversal, screen reader spot-check
-- Automated: axe-core checks in unit tests
+- Automated: axe-core in unit tests (jest-axe, axe-core 4.10+)
+- E2E: @axe-core/playwright with `wcag2a`, `wcag2aa`, `wcag22aa` tags
+- E2E: bounding-box assertions for target size (SC 2.5.8)
 - CI: run a11y checks on every PR
